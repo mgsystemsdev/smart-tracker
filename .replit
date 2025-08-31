@@ -1,2 +1,30 @@
+modules = ["python-3.11"]
 [agent]
 expertMode = true
+
+[nix]
+channel = "stable-25_05"
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Smart Tracker Streamlit App"
+
+[[workflows.workflow]]
+name = "Smart Tracker Streamlit App"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "pip install streamlit typer pydantic && python main.py streamlit"
+waitForPort = 5000
+
+[workflows.workflow.metadata]
+outputType = "webview"
