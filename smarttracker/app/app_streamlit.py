@@ -53,7 +53,7 @@ def main():
         
         # Interactive demo section
         st.markdown("### Quick Demo")
-        col_demo1, col_demo2 = st.columns(2)
+        col_demo1, col_demo2, col_demo3 = st.columns(3)
         
         with col_demo1:
             if st.button("🎉 Click me!", type="primary"):
@@ -61,7 +61,7 @@ def main():
                 st.success("Smart Tracker is working perfectly!")
         
         with col_demo2:
-            # Create a link that opens in a new window
+            # Create a link that opens Clean Dashboard in a new window
             dashboard_url = "about:blank"  # Placeholder URL - replace with actual Clean Dashboard URL
             st.markdown(f"""
             <a href="{dashboard_url}" target="_blank" style="text-decoration: none;">
@@ -81,6 +81,28 @@ def main():
             </a>
             """, unsafe_allow_html=True)
             st.caption("Opens the Clean Dashboard for learning session tracking in a new tab")
+        
+        with col_demo3:
+            # Create a link that opens Smart Learning Tracker Desktop in a new window
+            learning_tracker_url = "about:blank"  # Placeholder URL - replace with actual Smart Learning Tracker URL
+            st.markdown(f"""
+            <a href="{learning_tracker_url}" target="_blank" style="text-decoration: none;">
+                <button style="
+                    background-color: #262730;
+                    color: white;
+                    border: none;
+                    padding: 0.5rem 1rem;
+                    border-radius: 0.25rem;
+                    cursor: pointer;
+                    font-size: 1rem;
+                    margin: 0.25rem 0;
+                    width: 100%;
+                ">
+                    🎓 Smart Learning Tracker
+                </button>
+            </a>
+            """, unsafe_allow_html=True)
+            st.caption("Opens the Smart Learning Tracker Desktop app in a new tab")
         
         # Info about the application
         with st.expander("📖 About This Application"):
