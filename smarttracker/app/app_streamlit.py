@@ -199,31 +199,109 @@ def show_home_page():
             st.session_state.current_page = "learning_tracker"
             st.rerun()
     
-    # Professional stats section
+    # Professional stats section with tech stack management
     st.markdown("---")
-    st.markdown("""
+    
+    # Initialize tech stack in session state if not exists
+    if "tech_stack" not in st.session_state:
+        st.session_state.tech_stack = [
+            {"name": "Python 3.11+", "category": "Core Engine"},
+            {"name": "Streamlit", "category": "Web Interface"},
+            {"name": "Typer CLI", "category": "Command Line"},
+            {"name": "Pydantic", "category": "Validation"}
+        ]
+    
+    # Tech stack header with update button
+    col_title, col_button = st.columns([3, 1])
+    
+    with col_title:
+        st.markdown("""
+        <h4 style="color: #FFD700; margin-bottom: 1rem;">🏗️ My Tech Stack</h4>
+        """, unsafe_allow_html=True)
+    
+    with col_button:
+        if st.button("⚙️ Update Stack", help="Add or modify technologies in your stack"):
+            st.session_state.show_tech_dialog = True
+            st.rerun()
+    
+    # Display current tech stack
+    tech_items = ""
+    for i, tech in enumerate(st.session_state.tech_stack):
+        if i % 4 == 0 and i > 0:
+            tech_items += "</div><div style='display: flex; justify-content: space-around; text-align: center; margin-top: 1rem;'>"
+        elif i == 0:
+            tech_items += "<div style='display: flex; justify-content: space-around; text-align: center;'>"
+        
+        tech_items += f"""
+            <div>
+                <div style="color: #00CED1; font-size: 1.5rem; font-weight: bold;">{tech['name']}</div>
+                <div style="color: #C0C0C0; font-size: 0.9rem;">{tech['category']}</div>
+            </div>
+        """
+    
+    tech_items += "</div>"
+    
+    st.markdown(f"""
     <div class="stats-container">
-        <h4 style="color: #FFD700; text-align: center; margin-bottom: 1rem;">🏗️ My Tech Stack</h4>
-        <div style="display: flex; justify-content: space-around; text-align: center;">
-            <div>
-                <div style="color: #00CED1; font-size: 1.5rem; font-weight: bold;">Python 3.11+</div>
-                <div style="color: #C0C0C0; font-size: 0.9rem;">Core Engine</div>
-            </div>
-            <div>
-                <div style="color: #00CED1; font-size: 1.5rem; font-weight: bold;">Streamlit</div>
-                <div style="color: #C0C0C0; font-size: 0.9rem;">Web Interface</div>
-            </div>
-            <div>
-                <div style="color: #00CED1; font-size: 1.5rem; font-weight: bold;">Typer CLI</div>
-                <div style="color: #C0C0C0; font-size: 0.9rem;">Command Line</div>
-            </div>
-            <div>
-                <div style="color: #00CED1; font-size: 1.5rem; font-weight: bold;">Pydantic</div>
-                <div style="color: #C0C0C0; font-size: 0.9rem;">Validation</div>
-            </div>
-        </div>
+        {tech_items}
     </div>
     """, unsafe_allow_html=True)
+    
+    # Tech stack update dialog
+    if st.session_state.get("show_tech_dialog", False):
+        with st.container():
+            st.markdown("""
+            <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); padding: 2rem; border-radius: 15px; border: 2px solid #FFD700; margin: 1rem 0;">
+            """, unsafe_allow_html=True)
+            
+            st.markdown("### ⚙️ Update Tech Stack")
+            
+            # Add new technology
+            st.markdown("#### Add New Technology")
+            col_name, col_cat = st.columns(2)
+            
+            with col_name:
+                new_tech_name = st.text_input("Technology Name", placeholder="e.g., React, Docker, PostgreSQL")
+            
+            with col_cat:
+                new_tech_category = st.text_input("Category", placeholder="e.g., Frontend, DevOps, Database")
+            
+            col_add, col_close = st.columns(2)
+            
+            with col_add:
+                if st.button("➕ Add Technology", type="primary"):
+                    if new_tech_name and new_tech_category:
+                        st.session_state.tech_stack.append({
+                            "name": new_tech_name,
+                            "category": new_tech_category
+                        })
+                        st.success(f"Added {new_tech_name} to your tech stack!")
+                        st.rerun()
+                    else:
+                        st.error("Please enter both technology name and category.")
+            
+            with col_close:
+                if st.button("❌ Close Dialog"):
+                    st.session_state.show_tech_dialog = False
+                    st.rerun()
+            
+            # Manage existing technologies
+            if len(st.session_state.tech_stack) > 4:  # Show management only if there are added technologies
+                st.markdown("#### Manage Existing Technologies")
+                
+                for i, tech in enumerate(st.session_state.tech_stack[4:], start=4):  # Skip the default 4
+                    col_tech, col_remove = st.columns([3, 1])
+                    
+                    with col_tech:
+                        st.write(f"**{tech['name']}** - *{tech['category']}*")
+                    
+                    with col_remove:
+                        if st.button(f"🗑️", key=f"remove_{i}", help=f"Remove {tech['name']}"):
+                            st.session_state.tech_stack.pop(i)
+                            st.success(f"Removed {tech['name']} from your tech stack!")
+                            st.rerun()
+            
+            st.markdown("</div>", unsafe_allow_html=True)
     
     # Footer with personal branding
     st.markdown("""
