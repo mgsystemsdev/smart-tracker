@@ -224,28 +224,33 @@ def show_home_page():
             st.session_state.show_tech_dialog = True
             st.rerun()
     
-    # Display current tech stack
-    tech_items = ""
-    for i, tech in enumerate(st.session_state.tech_stack):
-        if i % 4 == 0 and i > 0:
-            tech_items += "</div><div style='display: flex; justify-content: space-around; text-align: center; margin-top: 1rem;'>"
-        elif i == 0:
-            tech_items += "<div style='display: flex; justify-content: space-around; text-align: center;'>"
+    # Display current tech stack using dynamic Streamlit components
+    with st.container():
+        st.markdown("""
+        <div class="stats-container">
+        """, unsafe_allow_html=True)
         
-        tech_items += f"""
-            <div>
-                <div style="color: #00CED1; font-size: 1.5rem; font-weight: bold;">{tech['name']}</div>
-                <div style="color: #C0C0C0; font-size: 0.9rem;">{tech['category']}</div>
-            </div>
-        """
-    
-    tech_items += "</div>"
-    
-    st.markdown(f"""
-    <div class="stats-container">
-        {tech_items}
-    </div>
-    """, unsafe_allow_html=True)
+        # Create rows of technologies (4 per row)
+        tech_stack = st.session_state.tech_stack
+        rows = [tech_stack[i:i+4] for i in range(0, len(tech_stack), 4)]
+        
+        for row in rows:
+            cols = st.columns(4)
+            for i, tech in enumerate(row):
+                with cols[i]:
+                    st.markdown(f"""
+                    <div style="text-align: center; padding: 1rem;">
+                        <div style="color: #00CED1; font-size: 1.5rem; font-weight: bold;">{tech['name']}</div>
+                        <div style="color: #C0C0C0; font-size: 0.9rem;">{tech['category']}</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+            
+            # Fill empty columns if row is not complete
+            for i in range(len(row), 4):
+                with cols[i]:
+                    st.empty()
+        
+        st.markdown("</div>", unsafe_allow_html=True)
     
     # Tech stack update dialog
     if st.session_state.get("show_tech_dialog", False):
