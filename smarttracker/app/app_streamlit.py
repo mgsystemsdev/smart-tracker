@@ -318,72 +318,166 @@ def show_home_page():
     """, unsafe_allow_html=True)
 
 def show_clean_dashboard():
-    """Display the Clean Dashboard interface."""
-    st.title("📚 Clean Dashboard - Ready for Enrollers")
+    """Display the Personal Development Dashboard."""
+    # Header with MG branding
+    st.markdown("""
+    <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); padding: 1.5rem; border-radius: 15px; margin-bottom: 2rem; border: 2px solid #FFD700;">
+        <h1 style="color: #FFD700; margin: 0; text-align: center;">📚 Personal Development Dashboard</h1>
+        <p style="color: #C0C0C0; text-align: center; margin: 0.5rem 0 0 0;">Track Your Learning Journey</p>
+    </div>
+    """, unsafe_allow_html=True)
     
     # Back button
-    if st.button("← Back to Home"):
+    if st.button("← Back to Home", help="Return to main page"):
         st.session_state.current_page = "home"
         st.rerun()
     
-    st.markdown("---")
+    # Initialize learning sessions in session state
+    if "learning_sessions" not in st.session_state:
+        st.session_state.learning_sessions = []
     
-    # Main dashboard table
-    col1, col2 = st.columns([3, 1])
+    # Dashboard metrics
+    st.markdown("### 📊 Learning Metrics")
+    col1, col2, col3, col4 = st.columns(4)
+    
+    total_sessions = len(st.session_state.learning_sessions)
+    total_hours = sum(session.get("hours", 0) for session in st.session_state.learning_sessions)
+    completed_sessions = len([s for s in st.session_state.learning_sessions if s.get("status") == "Completed"])
+    completion_rate = (completed_sessions / total_sessions * 100) if total_sessions > 0 else 0
     
     with col1:
-        st.subheader("Learning Sessions")
-        
-        # Table headers
-        headers = ["Date", "Language", "Type", "Work Item Name", "Topic", "Difficulty", "Status", "Tags", "Hours", "Target Time", "Points", "Progress %", "ID", "Notes"]
-        
-        # Create empty dataframe
-        df = pd.DataFrame(columns=headers)
-        
-        # Display table
-        st.dataframe(df, use_container_width=True, height=200)
-    
+        st.metric("Total Sessions", total_sessions)
     with col2:
-        st.subheader("Quick Actions")
-        if st.button("Add", use_container_width=True):
-            st.success("Add function would be implemented here")
-        if st.button("Save", use_container_width=True):
-            st.success("Save function would be implemented here")
-        if st.button("Cancel", use_container_width=True):
-            st.info("Cancel function would be implemented here")
-        if st.button("Clear Filters", use_container_width=True):
-            st.info("Filters cleared")
-        if st.button("Delete", use_container_width=True):
-            st.warning("Delete function would be implemented here")
+        st.metric("Hours Logged", f"{total_hours:.1f}")
+    with col3:
+        st.metric("Completed", completed_sessions)
+    with col4:
+        st.metric("Completion Rate", f"{completion_rate:.1f}%")
     
-    # Learning Session Entry Form
     st.markdown("---")
-    st.subheader("Learning Session Entry")
     
-    col_left, col_right = st.columns(2)
+    # Main content area
+    col_left, col_right = st.columns([2, 1])
     
     with col_left:
-        session_date = st.date_input("Date", value=date.today())
-        language = st.selectbox("Language", ["Python", "JavaScript", "Java", "C++", "Other"])
-        work_item = st.text_input("Work Item", placeholder="Project or resource name...")
-        topic = st.text_input("Topic", placeholder="Variables")
-        difficulty = st.selectbox("Difficulty", ["Easy", "Medium", "Hard"])
-        status = st.selectbox("Status", ["In Progress", "Completed", "Planned"])
+        st.subheader("📚 Recent Learning Sessions")
+        
+        if st.session_state.learning_sessions:
+            # Display sessions in a clean format
+            for i, session in enumerate(reversed(st.session_state.learning_sessions[-5:])):  # Show last 5 sessions
+                with st.expander(f"{session['date']} - {session['topic']} ({session['technology']})"):
+                    col_info, col_stats = st.columns(2)
+                    
+                    with col_info:
+                        st.write(f"**Technology:** {session['technology']}")
+                        st.write(f"**Type:** {session['type']}")
+                        st.write(f"**Difficulty:** {session['difficulty']}")
+                        st.write(f"**Status:** {session['status']}")
+                    
+                    with col_stats:
+                        st.write(f"**Hours:** {session['hours']}")
+                        st.write(f"**Progress:** {session['progress']}%")
+                        st.write(f"**Tags:** {session.get('tags', 'None')}")
+                    
+                    if session.get('notes'):
+                        st.write(f"**Notes:** {session['notes']}")
+        else:
+            st.info("No learning sessions recorded yet. Add your first session below!")
     
     with col_right:
-        session_type = st.selectbox("Type", ["Reading", "Coding", "Video", "Practice"])
-        hours_spent = st.number_input("Hours", min_value=0.0, value=0.0, step=0.1)
-        target_hours = st.number_input("Target", min_value=0.0, value=0.0, step=0.1)
-        tags = st.text_input("Tags", placeholder="basics")
-        progress = st.slider("Progress %", 0, 100, 0)
-        notes = st.text_area("Notes", placeholder="Quick notes about this session...")
+        st.subheader("🎯 Quick Actions")
+        
+        # Technology breakdown
+        if st.session_state.learning_sessions:
+            st.markdown("#### Technology Focus")
+            tech_count = {}
+            for session in st.session_state.learning_sessions:
+                tech = session.get('technology', 'Unknown')
+                tech_count[tech] = tech_count.get(tech, 0) + 1
+            
+            for tech, count in sorted(tech_count.items(), key=lambda x: x[1], reverse=True):
+                st.write(f"**{tech}:** {count} sessions")
+        
+        st.markdown("---")
+        
+        # Learning streak
+        st.markdown("#### 🔥 Learning Streak")
+        if st.session_state.learning_sessions:
+            recent_dates = [session['date'] for session in st.session_state.learning_sessions]
+            unique_dates = len(set(recent_dates))
+            st.metric("Unique Learning Days", unique_dates)
+        else:
+            st.metric("Learning Streak", "0 days")
     
-    # Save button
-    if st.button("Save Session", type="primary", use_container_width=True):
-        st.success("Session saved successfully!")
-        st.balloons()
+    # Add new learning session
+    st.markdown("---")
+    st.subheader("➕ Add Learning Session")
     
-    st.info("📊 Records: 0")
+    with st.form("learning_session_form"):
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            session_date = st.date_input("Date", value=date.today())
+            technology = st.selectbox("Technology", 
+                ["Python", "JavaScript", "React", "Node.js", "HTML/CSS", "SQL", "Docker", "Git", "AWS", "Other"])
+            topic = st.text_input("Topic/Subject", placeholder="e.g., Functions, API Development, Database Design")
+            session_type = st.selectbox("Session Type", ["Coding", "Reading", "Tutorial", "Practice", "Project", "Course"])
+        
+        with col2:
+            difficulty = st.selectbox("Difficulty", ["Beginner", "Intermediate", "Advanced", "Expert"])
+            hours = st.number_input("Hours Spent", min_value=0.0, value=1.0, step=0.25)
+            progress = st.slider("Progress Made (%)", 0, 100, 50)
+            status = st.selectbox("Status", ["In Progress", "Completed", "Paused", "Planned"])
+        
+        tags = st.text_input("Tags", placeholder="e.g., frontend, backend, database, api")
+        notes = st.text_area("Session Notes", placeholder="What did you learn? Any challenges or insights?")
+        
+        submitted = st.form_submit_button("💾 Save Learning Session", type="primary")
+        
+        if submitted:
+            new_session = {
+                "date": str(session_date),
+                "technology": technology,
+                "topic": topic,
+                "type": session_type,
+                "difficulty": difficulty,
+                "hours": hours,
+                "progress": progress,
+                "status": status,
+                "tags": tags,
+                "notes": notes
+            }
+            
+            st.session_state.learning_sessions.append(new_session)
+            st.success(f"✅ Added learning session: {topic} ({technology})")
+            st.balloons()
+            st.rerun()
+    
+    # Session management
+    if st.session_state.learning_sessions:
+        st.markdown("---")
+        st.subheader("🗂️ Manage Sessions")
+        
+        if st.button("📊 View All Sessions"):
+            st.session_state.show_all_sessions = not st.session_state.get("show_all_sessions", False)
+            st.rerun()
+        
+        if st.session_state.get("show_all_sessions", False):
+            st.markdown("#### All Learning Sessions")
+            
+            # Convert to DataFrame for better display
+            df = pd.DataFrame(st.session_state.learning_sessions)
+            if not df.empty:
+                # Reorder columns for better display
+                display_columns = ['date', 'technology', 'topic', 'type', 'difficulty', 'hours', 'status', 'progress']
+                df_display = df[display_columns]
+                st.dataframe(df_display, width=None, height=300)
+                
+                # Clear all sessions button
+                if st.button("🗑️ Clear All Sessions", help="This will delete all your learning sessions"):
+                    st.session_state.learning_sessions = []
+                    st.success("All sessions cleared!")
+                    st.rerun()
 
 def show_learning_tracker():
     """Display the Smart Learning Tracker interface."""
