@@ -356,33 +356,115 @@ def show_clean_dashboard():
     
     st.markdown("---")
     
+    # Filters and Sorting Section
+    st.markdown("### 🔍 Filters & Sorting")
+    
+    if st.session_state.learning_sessions:
+        # Create filter controls
+        col_filter1, col_filter2, col_filter3, col_sort = st.columns(4)
+        
+        # Get unique values for filters
+        df_temp = pd.DataFrame(st.session_state.learning_sessions)
+        unique_technologies = ['All'] + sorted(df_temp['technology'].unique().tolist())
+        unique_types = ['All'] + sorted(df_temp['type'].unique().tolist())
+        unique_statuses = ['All'] + sorted(df_temp['status'].unique().tolist())
+        
+        with col_filter1:
+            tech_filter = st.selectbox("Technology", unique_technologies, key="tech_filter")
+        
+        with col_filter2:
+            type_filter = st.selectbox("Session Type", unique_types, key="type_filter")
+        
+        with col_filter3:
+            status_filter = st.selectbox("Status", unique_statuses, key="status_filter")
+        
+        with col_sort:
+            sort_options = ['Date (Newest)', 'Date (Oldest)', 'Hours (Most)', 'Hours (Least)', 'Progress (High)', 'Progress (Low)']
+            sort_by = st.selectbox("Sort By", sort_options, key="sort_filter")
+        
+        # Apply filters
+        filtered_sessions = st.session_state.learning_sessions.copy()
+        
+        if tech_filter != 'All':
+            filtered_sessions = [s for s in filtered_sessions if s['technology'] == tech_filter]
+        
+        if type_filter != 'All':
+            filtered_sessions = [s for s in filtered_sessions if s['type'] == type_filter]
+        
+        if status_filter != 'All':
+            filtered_sessions = [s for s in filtered_sessions if s['status'] == status_filter]
+        
+        # Apply sorting
+        if sort_by == 'Date (Newest)':
+            filtered_sessions = sorted(filtered_sessions, key=lambda x: x['date'], reverse=True)
+        elif sort_by == 'Date (Oldest)':
+            filtered_sessions = sorted(filtered_sessions, key=lambda x: x['date'])
+        elif sort_by == 'Hours (Most)':
+            filtered_sessions = sorted(filtered_sessions, key=lambda x: x['hours'], reverse=True)
+        elif sort_by == 'Hours (Least)':
+            filtered_sessions = sorted(filtered_sessions, key=lambda x: x['hours'])
+        elif sort_by == 'Progress (High)':
+            filtered_sessions = sorted(filtered_sessions, key=lambda x: x['progress'], reverse=True)
+        elif sort_by == 'Progress (Low)':
+            filtered_sessions = sorted(filtered_sessions, key=lambda x: x['progress'])
+        
+        # Clear filters button
+        if st.button("🗑️ Clear All Filters"):
+            st.session_state.tech_filter = 'All'
+            st.session_state.type_filter = 'All'
+            st.session_state.status_filter = 'All'
+            st.session_state.sort_filter = 'Date (Newest)'
+            st.rerun()
+    
+    st.markdown("---")
+    
     # Main content area
     col_left, col_right = st.columns([2, 1])
     
     with col_left:
-        st.subheader("📚 Recent Learning Sessions")
-        
         if st.session_state.learning_sessions:
-            # Display sessions in a clean format
-            for i, session in enumerate(reversed(st.session_state.learning_sessions[-5:])):  # Show last 5 sessions
-                with st.expander(f"{session['date']} - {session['topic']} ({session['technology']})"):
-                    col_info, col_stats = st.columns(2)
+            # Show filtered results count
+            total_sessions = len(st.session_state.learning_sessions)
+            filtered_count = len(filtered_sessions)
+            
+            st.subheader(f"📚 Learning Sessions ({filtered_count} of {total_sessions})")
+            
+            if filtered_sessions:
+                # Display filtered and sorted sessions
+                for i, session in enumerate(filtered_sessions):
+                    # Color-code status
+                    status_color = {
+                        'Completed': '🟢',
+                        'In Progress': '🟡', 
+                        'Paused': '🟠',
+                        'Planned': '⚪'
+                    }.get(session['status'], '⚫')
                     
-                    with col_info:
-                        st.write(f"**Technology:** {session['technology']}")
-                        st.write(f"**Type:** {session['type']}")
-                        st.write(f"**Difficulty:** {session['difficulty']}")
-                        st.write(f"**Status:** {session['status']}")
-                    
-                    with col_stats:
-                        st.write(f"**Hours:** {session['hours']}")
-                        st.write(f"**Progress:** {session['progress']}%")
-                        st.write(f"**Tags:** {session.get('tags', 'None')}")
-                    
-                    if session.get('notes'):
-                        st.write(f"**Notes:** {session['notes']}")
+                    with st.expander(f"{status_color} {session['date']} - {session['topic']} ({session['technology']})"):
+                        col_info, col_stats = st.columns(2)
+                        
+                        with col_info:
+                            st.write(f"**Technology:** {session['technology']}")
+                            st.write(f"**Type:** {session['type']}")
+                            st.write(f"**Difficulty:** {session['difficulty']}")
+                            st.write(f"**Status:** {session['status']}")
+                        
+                        with col_stats:
+                            st.write(f"**Hours:** {session['hours']}")
+                            st.write(f"**Progress:** {session['progress']}%")
+                            st.write(f"**Tags:** {session.get('tags', 'None')}")
+                        
+                        if session.get('notes'):
+                            st.write(f"**Notes:** {session['notes']}")
+                        
+                        # Progress bar
+                        progress_val = session['progress'] / 100
+                        st.progress(progress_val, text=f"Progress: {session['progress']}%")
+            else:
+                st.info("No sessions match your current filters. Try adjusting the filters above.")
         else:
-            st.info("No learning sessions recorded yet. Add your first session below!")
+            st.subheader("📚 Learning Sessions")
+            st.info("No learning sessions recorded yet. Use the Smart Learning Tracker to add your first session!")
     
     with col_right:
         st.subheader("🎯 Quick Actions")
