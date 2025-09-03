@@ -409,49 +409,100 @@ def show_clean_dashboard():
         else:
             st.metric("Learning Streak", "0 days")
     
-    # Add new learning session
+    # Learning Analytics and Insights
     st.markdown("---")
-    st.subheader("➕ Add Learning Session")
+    st.subheader("📈 Learning Analytics")
     
-    with st.form("learning_session_form"):
-        col1, col2 = st.columns(2)
+    if st.session_state.learning_sessions:
+        # Progress tracking over time
+        col_chart, col_insights = st.columns([2, 1])
         
-        with col1:
-            session_date = st.date_input("Date", value=date.today())
-            technology = st.selectbox("Technology", 
-                ["Python", "JavaScript", "React", "Node.js", "HTML/CSS", "SQL", "Docker", "Git", "AWS", "Other"])
-            topic = st.text_input("Topic/Subject", placeholder="e.g., Functions, API Development, Database Design")
-            session_type = st.selectbox("Session Type", ["Coding", "Reading", "Tutorial", "Practice", "Project", "Course"])
-        
-        with col2:
-            difficulty = st.selectbox("Difficulty", ["Beginner", "Intermediate", "Advanced", "Expert"])
-            hours = st.number_input("Hours Spent", min_value=0.0, value=1.0, step=0.25)
-            progress = st.slider("Progress Made (%)", 0, 100, 50)
-            status = st.selectbox("Status", ["In Progress", "Completed", "Paused", "Planned"])
-        
-        tags = st.text_input("Tags", placeholder="e.g., frontend, backend, database, api")
-        notes = st.text_area("Session Notes", placeholder="What did you learn? Any challenges or insights?")
-        
-        submitted = st.form_submit_button("💾 Save Learning Session", type="primary")
-        
-        if submitted:
-            new_session = {
-                "date": str(session_date),
-                "technology": technology,
-                "topic": topic,
-                "type": session_type,
-                "difficulty": difficulty,
-                "hours": hours,
-                "progress": progress,
-                "status": status,
-                "tags": tags,
-                "notes": notes
-            }
+        with col_chart:
+            st.markdown("#### 📊 Progress Trends")
             
-            st.session_state.learning_sessions.append(new_session)
-            st.success(f"✅ Added learning session: {topic} ({technology})")
-            st.balloons()
-            st.rerun()
+            # Convert sessions to DataFrame for analysis
+            df = pd.DataFrame(st.session_state.learning_sessions)
+            df['date'] = pd.to_datetime(df['date'])
+            
+            # Daily hours chart
+            daily_hours = df.groupby('date')['hours'].sum().reset_index()
+            if not daily_hours.empty:
+                st.line_chart(daily_hours.set_index('date')['hours'])
+                st.caption("Daily learning hours over time")
+            
+            # Technology distribution
+            tech_dist = df['technology'].value_counts()
+            if not tech_dist.empty:
+                st.bar_chart(tech_dist)
+                st.caption("Sessions by technology")
+        
+        with col_insights:
+            st.markdown("#### 🎯 Learning Insights")
+            
+            # Calculate insights
+            avg_hours = df['hours'].mean()
+            most_common_tech = df['technology'].mode().iloc[0] if not df.empty else "None"
+            avg_progress = df['progress'].mean()
+            favorite_type = df['type'].mode().iloc[0] if not df.empty else "None"
+            
+            st.metric("Avg Hours/Session", f"{avg_hours:.1f}")
+            st.write(f"**Primary Focus:** {most_common_tech}")
+            st.write(f"**Avg Progress:** {avg_progress:.0f}%")
+            st.write(f"**Preferred Type:** {favorite_type}")
+            
+            # Learning consistency
+            unique_dates = df['date'].dt.date.nunique()
+            total_days = (df['date'].max() - df['date'].min()).days + 1 if len(df) > 1 else 1
+            consistency = (unique_dates / total_days) * 100 if total_days > 0 else 0
+            
+            st.metric("Learning Consistency", f"{consistency:.1f}%")
+            
+        # Skill progression matrix
+        st.markdown("#### 🎖️ Skill Progression")
+        
+        # Group by technology and difficulty to show progression
+        tech_difficulty = df.groupby(['technology', 'difficulty']).size().unstack(fill_value=0)
+        
+        if not tech_difficulty.empty:
+            # Create a simple progression view
+            for tech in tech_difficulty.index:
+                st.write(f"**{tech}:**")
+                difficulty_levels = ['Beginner', 'Intermediate', 'Advanced', 'Expert']
+                progress_bar_data = []
+                
+                for level in difficulty_levels:
+                    count = tech_difficulty.loc[tech, level] if level in tech_difficulty.columns else 0
+                    progress_bar_data.append(count)
+                
+                # Simple progress display
+                total_sessions = sum(progress_bar_data)
+                if total_sessions > 0:
+                    beginner_pct = (progress_bar_data[0] / total_sessions) * 100
+                    intermediate_pct = (progress_bar_data[1] / total_sessions) * 100
+                    advanced_pct = (progress_bar_data[2] / total_sessions) * 100
+                    expert_pct = (progress_bar_data[3] / total_sessions) * 100
+                    
+                    col1, col2, col3, col4 = st.columns(4)
+                    col1.metric("Beginner", f"{progress_bar_data[0]}")
+                    col2.metric("Intermediate", f"{progress_bar_data[1]}")
+                    col3.metric("Advanced", f"{progress_bar_data[2]}")
+                    col4.metric("Expert", f"{progress_bar_data[3]}")
+                
+                st.markdown("---")
+    
+    else:
+        # Empty state with motivational content
+        st.markdown("""
+        <div style="text-align: center; padding: 3rem; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 10px; border: 1px solid #FFD700;">
+            <h3 style="color: #FFD700;">🚀 Start Your Learning Journey</h3>
+            <p style="color: #C0C0C0; font-size: 1.1rem;">
+                Begin tracking your development progress to unlock powerful insights about your learning patterns.
+            </p>
+            <p style="color: #00CED1; font-size: 0.9rem;">
+                Use the Smart Learning Tracker to add your first session and watch your progress grow!
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
     
     # Session management
     if st.session_state.learning_sessions:
