@@ -10,62 +10,230 @@ from datetime import date
 from smarttracker import __version__
 
 def show_home_page():
-    """Display the home page content."""
+    """Display the professional home page with MG System Dev branding."""
+    
+    # Custom CSS for MG System Dev styling
+    st.markdown("""
+    <style>
+    .main-header {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        padding: 2rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+        border: 2px solid #FFD700;
+        box-shadow: 0 8px 32px rgba(255, 215, 0, 0.3);
+    }
+    
+    .mg-title {
+        font-size: 3rem;
+        font-weight: bold;
+        color: #FFD700;
+        text-align: center;
+        margin: 0;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        letter-spacing: 2px;
+    }
+    
+    .mg-subtitle {
+        font-size: 1.2rem;
+        color: #C0C0C0;
+        text-align: center;
+        margin-top: 0.5rem;
+        letter-spacing: 1px;
+    }
+    
+    .feature-card {
+        background: linear-gradient(145deg, #2c2c54 0%, #40407a 100%);
+        padding: 1.5rem;
+        border-radius: 12px;
+        border: 1px solid #FFD700;
+        margin: 1rem 0;
+        box-shadow: 0 4px 15px rgba(255, 215, 0, 0.2);
+        transition: transform 0.3s ease;
+    }
+    
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(255, 215, 0, 0.4);
+    }
+    
+    .feature-title {
+        color: #FFD700;
+        font-size: 1.3rem;
+        font-weight: bold;
+        margin-bottom: 0.8rem;
+        display: flex;
+        align-items: center;
+    }
+    
+    .feature-text {
+        color: #E8E8E8;
+        line-height: 1.6;
+    }
+    
+    .demo-button {
+        background: linear-gradient(145deg, #FFD700 0%, #FFA500 100%);
+        color: #000;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-weight: bold;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        width: 100%;
+        margin: 0.5rem 0;
+    }
+    
+    .demo-button:hover {
+        background: linear-gradient(145deg, #FFA500 0%, #FFD700 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(255, 215, 0, 0.5);
+    }
+    
+    .stats-container {
+        background: linear-gradient(135deg, #16213e 0%, #1a1a2e 100%);
+        padding: 1.5rem;
+        border-radius: 10px;
+        border: 1px solid #C0C0C0;
+        margin: 1rem 0;
+    }
+    
+    .tech-accent {
+        color: #00CED1;
+        font-weight: bold;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    # Main header section
+    st.markdown("""
+    <div class="main-header">
+        <h1 class="mg-title">MG SMART TRACKER</h1>
+        <p class="mg-subtitle">SYSTEM DEV | Professional Development Tracking Platform</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Welcome section
     col1, col2, col3 = st.columns([1, 2, 1])
     
     with col2:
-        st.markdown("## Hello, world! 👋")
         st.markdown("""
-        Welcome to Smart Tracker! This is the foundation of your tracking application.
+        <div style="text-align: center; margin: 2rem 0;">
+            <h2 style="color: #FFD700; margin-bottom: 1rem;">🚀 Welcome to the Future of Learning</h2>
+            <p style="color: #C0C0C0; font-size: 1.1rem; line-height: 1.6;">
+                Powered by <span class="tech-accent">MG System Dev</span>, this advanced tracking platform 
+                combines cutting-edge technology with intuitive design to revolutionize how you monitor 
+                your development progress.
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    # Feature cards
+    col_left, col_right = st.columns(2)
+    
+    with col_left:
+        st.markdown("""
+        <div class="feature-card">
+            <div class="feature-title">⚡ Advanced Analytics</div>
+            <div class="feature-text">
+                Real-time progress tracking with intelligent insights and performance metrics 
+                to accelerate your learning journey.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
         
-        ### Ready for Development
-        - ✅ Streamlit web interface
-        - ✅ Typer CLI interface  
-        - ✅ Organized package structure
-        - ✅ Domain and app layers
-        - ✅ Testing framework ready
+        st.markdown("""
+        <div class="feature-card">
+            <div class="feature-title">🎯 Smart Goal Management</div>
+            <div class="feature-text">
+                AI-powered goal setting and milestone tracking that adapts to your 
+                learning pace and preferences.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col_right:
+        st.markdown("""
+        <div class="feature-card">
+            <div class="feature-title">🔧 Multi-Platform Integration</div>
+            <div class="feature-text">
+                Seamlessly connect with your development tools and platforms for 
+                comprehensive progress monitoring.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
         
-        ### Next Steps
-        1. Implement your tracking models in `smarttracker/domain/`
-        2. Add business logic and services
-        3. Expand the web interface with tracking features
-        4. Enhance the CLI with tracking commands
-        5. Add comprehensive tests
-        """)
-        
-        # Interactive demo section
-        st.markdown("### Quick Demo")
-        col_demo1, col_demo2, col_demo3 = st.columns(3)
-        
-        with col_demo1:
-            if st.button("🎉 Click me!", type="primary"):
-                st.balloons()
-                st.success("Smart Tracker is working perfectly!")
-        
-        with col_demo2:
-            if st.button("📚 Open Clean Dashboard", help="Opens the Clean Dashboard for learning session tracking"):
-                st.session_state.current_page = "clean_dashboard"
-                st.rerun()
-        
-        with col_demo3:
-            if st.button("🎓 Smart Learning Tracker", help="Opens the Smart Learning Tracker Desktop app"):
-                st.session_state.current_page = "learning_tracker"
-                st.rerun()
-        
-        # Info about the application
-        with st.expander("📖 About This Application"):
-            st.markdown("""
-            This Smart Tracker application is built with:
-            - **Streamlit** for the web interface
-            - **Typer** for the command-line interface
-            - **Pydantic** for data validation (ready to use)
-            - **Python 3.11+** compatibility
-            
-            The application follows a clean architecture with separated concerns:
-            - `domain/` - Business logic and models
-            - `app/` - User interface implementations
-            - `cli.py` - Command-line interface
-            """)
+        st.markdown("""
+        <div class="feature-card">
+            <div class="feature-title">📊 Professional Dashboards</div>
+            <div class="feature-text">
+                Enterprise-grade interfaces designed for developers, with customizable 
+                views and detailed reporting capabilities.
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    # Demo section with professional styling
+    st.markdown("---")
+    st.markdown("""
+    <div style="text-align: center; margin: 2rem 0;">
+        <h3 style="color: #FFD700; margin-bottom: 1rem;">🎮 Experience Our Platforms</h3>
+        <p style="color: #C0C0C0;">Choose your preferred tracking interface</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    col_demo1, col_demo2, col_demo3 = st.columns(3)
+    
+    with col_demo1:
+        if st.button("🎉 System Demo", help="Experience the MG System capabilities"):
+            st.balloons()
+            st.success("🚀 MG System Dev - Tracking Excellence Activated!")
+    
+    with col_demo2:
+        if st.button("📚 Clean Dashboard", help="Professional learning session tracking interface"):
+            st.session_state.current_page = "clean_dashboard"
+            st.rerun()
+    
+    with col_demo3:
+        if st.button("🎓 Learning Tracker", help="Advanced desktop-style tracking application"):
+            st.session_state.current_page = "learning_tracker"
+            st.rerun()
+    
+    # Professional stats section
+    st.markdown("---")
+    st.markdown("""
+    <div class="stats-container">
+        <h4 style="color: #FFD700; text-align: center; margin-bottom: 1rem;">🏗️ Built with Enterprise Technology</h4>
+        <div style="display: flex; justify-content: space-around; text-align: center;">
+            <div>
+                <div style="color: #00CED1; font-size: 1.5rem; font-weight: bold;">Python 3.11+</div>
+                <div style="color: #C0C0C0; font-size: 0.9rem;">Core Engine</div>
+            </div>
+            <div>
+                <div style="color: #00CED1; font-size: 1.5rem; font-weight: bold;">Streamlit</div>
+                <div style="color: #C0C0C0; font-size: 0.9rem;">Web Interface</div>
+            </div>
+            <div>
+                <div style="color: #00CED1; font-size: 1.5rem; font-weight: bold;">Typer CLI</div>
+                <div style="color: #C0C0C0; font-size: 0.9rem;">Command Line</div>
+            </div>
+            <div>
+                <div style="color: #00CED1; font-size: 1.5rem; font-weight: bold;">Pydantic</div>
+                <div style="color: #C0C0C0; font-size: 0.9rem;">Validation</div>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Footer with MG branding
+    st.markdown("""
+    <div style="text-align: center; margin-top: 3rem; padding: 1rem; color: #C0C0C0;">
+        <hr style="border-color: #FFD700;">
+        <p style="margin: 0.5rem 0;">Developed by <span style="color: #FFD700; font-weight: bold;">MG SYSTEM DEV</span></p>
+        <p style="margin: 0; font-size: 0.9rem;">Professional Development • System Architecture • Innovation</p>
+    </div>
+    """, unsafe_allow_html=True)
 
 def show_clean_dashboard():
     """Display the Clean Dashboard interface."""
@@ -216,8 +384,8 @@ def main():
     """Main Streamlit application function."""
     # Page configuration
     st.set_page_config(
-        page_title="Smart Tracker",
-        page_icon="📊",
+        page_title="MG Smart Tracker | System Dev",
+        page_icon="⚡",
         layout="wide",
         initial_sidebar_state="expanded"
     )
@@ -226,31 +394,57 @@ def main():
     if "current_page" not in st.session_state:
         st.session_state.current_page = "home"
     
-    # Main header
-    st.title("📊 Smart Tracker")
-    st.subheader("Your Personal Tracking Application")
+    # Main header with MG branding
+    st.markdown("""
+    <div style="text-align: center; padding: 1rem 0; background: linear-gradient(90deg, #1a1a2e 0%, #16213e 50%, #1a1a2e 100%); border-radius: 10px; margin-bottom: 1rem;">
+        <h1 style="color: #FFD700; margin: 0; font-size: 2.5rem; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">⚡ MG SMART TRACKER</h1>
+        <p style="color: #C0C0C0; margin: 0.5rem 0 0 0; font-size: 1.1rem;">Professional Development Tracking Platform</p>
+    </div>
+    """, unsafe_allow_html=True)
     
-    # Version info in sidebar
+    # Professional sidebar with MG branding
     with st.sidebar:
-        st.info(f"Version: {__version__}")
-        st.markdown("---")
-        st.markdown("### Navigation")
+        st.markdown("""
+        <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); padding: 1rem; border-radius: 10px; border: 1px solid #FFD700; margin-bottom: 1rem;">
+            <h3 style="color: #FFD700; text-align: center; margin: 0;">⚡ MG SYSTEM</h3>
+            <p style="color: #C0C0C0; text-align: center; margin: 0.5rem 0 0 0; font-size: 0.9rem;">v{}</p>
+        </div>
+        """.format(__version__), unsafe_allow_html=True)
         
-        # Navigation buttons
-        if st.button("🏠 Home", use_container_width=True):
+        st.markdown("### 🎯 Navigation")
+        
+        # Navigation buttons with professional styling
+        if st.button("🏠 Home", width="stretch"):
             st.session_state.current_page = "home"
             st.rerun()
         
-        if st.button("📚 Clean Dashboard", use_container_width=True):
+        if st.button("📚 Clean Dashboard", width="stretch"):
             st.session_state.current_page = "clean_dashboard"
             st.rerun()
             
-        if st.button("🎓 Learning Tracker", use_container_width=True):
+        if st.button("🎓 Learning Tracker", width="stretch"):
             st.session_state.current_page = "learning_tracker"
             st.rerun()
         
         st.markdown("---")
-        st.markdown("Welcome to Smart Tracker! Use the navigation above to explore different tracking interfaces.")
+        
+        # Professional info section
+        st.markdown("""
+        <div style="background: linear-gradient(135deg, #16213e 0%, #1a1a2e 100%); padding: 1rem; border-radius: 8px; border: 1px solid #C0C0C0;">
+            <h4 style="color: #FFD700; margin-top: 0;">🔧 System Status</h4>
+            <p style="color: #00CED1; margin: 0.5rem 0;"><strong>Status:</strong> <span style="color: #90EE90;">Online</span></p>
+            <p style="color: #00CED1; margin: 0.5rem 0;"><strong>Mode:</strong> Development</p>
+            <p style="color: #00CED1; margin: 0.5rem 0;"><strong>Build:</strong> Professional</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown("---")
+        st.markdown("""
+        <div style="text-align: center; color: #C0C0C0; font-size: 0.9rem;">
+            <p><strong style="color: #FFD700;">MG System Dev</strong></p>
+            <p>Professional tracking solutions for developers</p>
+        </div>
+        """, unsafe_allow_html=True)
     
     # Display the appropriate page
     if st.session_state.current_page == "home":
