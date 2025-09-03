@@ -43,7 +43,7 @@ def show_home_page():
     }
     
     .feature-card {
-        background: linear-gradient(145deg, #2c2c54 0%, #40407a 100%);
+        background: linear-gradient(145deg, #1a1a2e 0%, #16213e 100%);
         padding: 1.5rem;
         border-radius: 12px;
         border: 1px solid #FFD700;
