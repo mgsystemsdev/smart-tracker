@@ -120,11 +120,10 @@ def show_home_page():
     with col2:
         st.markdown("""
         <div style="text-align: center; margin: 2rem 0;">
-            <h2 style="color: #FFD700; margin-bottom: 1rem;">🚀 Welcome to the Future of Learning</h2>
+            <h2 style="color: #FFD700; margin-bottom: 1rem;">🚀 My Personal Development Tracker</h2>
             <p style="color: #C0C0C0; font-size: 1.1rem; line-height: 1.6;">
-                Powered by <span class="tech-accent">MG System Dev</span>, this advanced tracking platform 
-                combines cutting-edge technology with intuitive design to revolutionize how you monitor 
-                your development progress.
+                Built with <span class="tech-accent">MG System Dev</span> expertise, this is my personal 
+                tracking system to monitor my learning progress, skills development, and coding journey.
             </p>
         </div>
         """, unsafe_allow_html=True)
@@ -135,20 +134,20 @@ def show_home_page():
     with col_left:
         st.markdown("""
         <div class="feature-card">
-            <div class="feature-title">⚡ Advanced Analytics</div>
+            <div class="feature-title">⚡ Progress Analytics</div>
             <div class="feature-text">
-                Real-time progress tracking with intelligent insights and performance metrics 
-                to accelerate your learning journey.
+                Track my learning sessions, coding hours, and skill development 
+                with detailed insights and progress visualization.
             </div>
         </div>
         """, unsafe_allow_html=True)
         
         st.markdown("""
         <div class="feature-card">
-            <div class="feature-title">🎯 Smart Goal Management</div>
+            <div class="feature-title">🎯 Personal Goals</div>
             <div class="feature-text">
-                AI-powered goal setting and milestone tracking that adapts to your 
-                learning pace and preferences.
+                Set and monitor my coding goals, learning milestones, and 
+                development targets to stay motivated and focused.
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -156,20 +155,20 @@ def show_home_page():
     with col_right:
         st.markdown("""
         <div class="feature-card">
-            <div class="feature-title">🔧 Multi-Platform Integration</div>
+            <div class="feature-title">🔧 Learning Management</div>
             <div class="feature-text">
-                Seamlessly connect with your development tools and platforms for 
-                comprehensive progress monitoring.
+                Organize my study sessions, coding projects, and learning resources 
+                all in one centralized personal system.
             </div>
         </div>
         """, unsafe_allow_html=True)
         
         st.markdown("""
         <div class="feature-card">
-            <div class="feature-title">📊 Professional Dashboards</div>
+            <div class="feature-title">📊 Personal Dashboard</div>
             <div class="feature-text">
-                Enterprise-grade interfaces designed for developers, with customizable 
-                views and detailed reporting capabilities.
+                Clean, focused interface designed for my personal use with 
+                customizable views to track my development journey.
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -178,8 +177,8 @@ def show_home_page():
     st.markdown("---")
     st.markdown("""
     <div style="text-align: center; margin: 2rem 0;">
-        <h3 style="color: #FFD700; margin-bottom: 1rem;">🎮 Experience Our Platforms</h3>
-        <p style="color: #C0C0C0;">Choose your preferred tracking interface</p>
+        <h3 style="color: #FFD700; margin-bottom: 1rem;">🎮 My Tracking Interfaces</h3>
+        <p style="color: #C0C0C0;">Choose my preferred tracking mode</p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -204,7 +203,7 @@ def show_home_page():
     st.markdown("---")
     st.markdown("""
     <div class="stats-container">
-        <h4 style="color: #FFD700; text-align: center; margin-bottom: 1rem;">🏗️ Built with Enterprise Technology</h4>
+        <h4 style="color: #FFD700; text-align: center; margin-bottom: 1rem;">🏗️ My Tech Stack</h4>
         <div style="display: flex; justify-content: space-around; text-align: center;">
             <div>
                 <div style="color: #00CED1; font-size: 1.5rem; font-weight: bold;">Python 3.11+</div>
@@ -226,12 +225,12 @@ def show_home_page():
     </div>
     """, unsafe_allow_html=True)
     
-    # Footer with MG branding
+    # Footer with personal branding
     st.markdown("""
     <div style="text-align: center; margin-top: 3rem; padding: 1rem; color: #C0C0C0;">
         <hr style="border-color: #FFD700;">
-        <p style="margin: 0.5rem 0;">Developed by <span style="color: #FFD700; font-weight: bold;">MG SYSTEM DEV</span></p>
-        <p style="margin: 0; font-size: 0.9rem;">Professional Development • System Architecture • Innovation</p>
+        <p style="margin: 0.5rem 0;">Built by <span style="color: #FFD700; font-weight: bold;">MG SYSTEM DEV</span></p>
+        <p style="margin: 0; font-size: 0.9rem;">Personal Development • Learning Tracker • Progress Monitor</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -442,7 +441,7 @@ def main():
         st.markdown("""
         <div style="text-align: center; color: #C0C0C0; font-size: 0.9rem;">
             <p><strong style="color: #FFD700;">MG System Dev</strong></p>
-            <p>Professional tracking solutions for developers</p>
+            <p>Personal learning & development tracking</p>
         </div>
         """, unsafe_allow_html=True)
     
