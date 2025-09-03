@@ -614,80 +614,172 @@ def show_clean_dashboard():
 
 def show_learning_tracker():
     """Display the Smart Learning Tracker interface."""
-    st.title("🎓 Smart Learning Tracker - Desktop")
+    # Header with MG branding
+    st.markdown("""
+    <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); padding: 1.5rem; border-radius: 15px; margin-bottom: 2rem; border: 2px solid #FFD700;">
+        <h1 style="color: #FFD700; margin: 0; text-align: center;">🎓 Smart Learning Tracker</h1>
+        <p style="color: #C0C0C0; text-align: center; margin: 0.5rem 0 0 0;">Desktop-Style Session Entry</p>
+    </div>
+    """, unsafe_allow_html=True)
     
     # Back button
     if st.button("← Back to Home"):
         st.session_state.current_page = "home"
         st.rerun()
     
+    # Initialize learning sessions if not exists
+    if "learning_sessions" not in st.session_state:
+        st.session_state.learning_sessions = []
+    
     st.markdown("---")
     
     # Create the form layout similar to the desktop app
-    col_left, col_main = st.columns([1, 3])
+    col_left, col_main = st.columns([1, 2])
     
     with col_left:
-        st.subheader("Session Details")
+        st.subheader("📝 Session Entry")
         
-        # Form fields matching the desktop app
-        session_date = st.date_input("Session Date", value=date.today())
-        language = st.selectbox("Language", ["Python", "JavaScript", "Java", "C#", "Other"])
-        work_item = st.text_input("Work Item", placeholder="Enter work item...")
-        skill = st.text_input("Skill", placeholder="Enter skill...")
+        with st.form("smart_tracker_form"):
+            # Form fields matching the desktop app
+            session_date = st.date_input("Session Date", value=date.today())
+            technology = st.selectbox("Technology", ["Python", "JavaScript", "Java", "C#", "React", "Node.js", "SQL", "Docker", "AWS", "Other"])
+            work_item = st.text_input("Work Item", placeholder="Enter project or resource...")
+            skill = st.text_input("Skill/Topic", placeholder="Enter specific skill or topic...")
+            
+            category_type = st.selectbox("Category Type", ["Framework", "Language", "Tool", "Concept", "Project"])
+            category_name = st.text_input("Category Name", placeholder="Enter category...")
+            category_source = st.text_input("Category Source", placeholder="Course, book, tutorial...")
+            
+            difficulty = st.selectbox("Difficulty", ["Beginner", "Intermediate", "Advanced", "Expert"])
+            status = st.selectbox("Status", ["In Progress", "Completed", "Paused", "Planned"])
+            
+            hours_spent = st.number_input("Hours Spent", min_value=0.0, value=1.0, step=0.25)
+            target_hours = st.number_input("Target Hours", min_value=0.0, value=2.0, step=0.25)
+            
+            progress = st.slider("Progress (%)", 0, 100, 50)
+            session_type = st.selectbox("Session Type", ["Coding", "Reading", "Tutorial", "Practice", "Project", "Course"])
+            
+            tags = st.text_area("Tags", placeholder="Enter tags separated by commas...")
+            notes = st.text_area("Notes", placeholder="Detailed notes about this session...")
+            
+            # Save button
+            submitted = st.form_submit_button("💾 Save Session", type="primary")
+            
+            if submitted:
+                # Create session object compatible with dashboard
+                new_session = {
+                    "date": str(session_date),
+                    "technology": technology,
+                    "topic": skill or work_item,  # Use skill as topic, fallback to work_item
+                    "work_item": work_item,
+                    "skill": skill,
+                    "type": session_type,
+                    "category_type": category_type,
+                    "category_name": category_name,
+                    "category_source": category_source,
+                    "difficulty": difficulty,
+                    "status": status,
+                    "hours": hours_spent,
+                    "target_hours": target_hours,
+                    "progress": progress,
+                    "tags": tags,
+                    "notes": notes
+                }
+                
+                st.session_state.learning_sessions.append(new_session)
+                st.success(f"✅ Session saved: {skill or work_item} ({technology})")
+                st.balloons()
+                st.rerun()
         
-        category_type = st.selectbox("Category Type", ["Framework", "Language", "Tool", "Concept"])
-        category_name = st.text_input("Category Name", placeholder="Enter category...")
-        category_source = st.text_input("Category Source", placeholder="Enter source...")
-        
-        difficulty = st.selectbox("Difficulty", ["Beginner", "Intermediate", "Advanced"])
-        status = st.selectbox("Status", ["In Progress", "Completed", "Planned"])
-        
-        hours_spent = st.number_input("Hours Spent", min_value=0.0, value=0.0, step=0.1)
-        target_hours = st.number_input("Target Hours", min_value=0.0, value=0.0, step=0.1)
-        
-        tags = st.text_area("Tags", placeholder="Enter tags separated by commas...")
-        notes = st.text_area("Notes", placeholder="Additional notes about this session...")
-        
-        # Save button
-        if st.button("Save Session", type="primary", use_container_width=True):
-            st.success("Learning session saved!")
-            st.balloons()
-        
-        st.caption("Ready")
+        # Status indicator
+        st.markdown("""
+        <div style="background: linear-gradient(135deg, #16213e 0%, #1a1a2e 100%); padding: 0.5rem; border-radius: 5px; text-align: center; margin-top: 1rem;">
+            <span style="color: #90EE90;">● Ready</span>
+        </div>
+        """, unsafe_allow_html=True)
     
     with col_main:
-        st.subheader("Session Overview")
+        st.subheader("📊 Session Overview & History")
         
-        # Display a table with the session data
-        st.markdown("### Current Session Data")
+        # Quick stats
+        total_sessions = len(st.session_state.learning_sessions)
+        total_hours = sum(s.get("hours", 0) for s in st.session_state.learning_sessions)
+        completed_sessions = len([s for s in st.session_state.learning_sessions if s.get("status") == "Completed"])
         
-        # Create a preview of the current session
-        if st.button("Show Session Preview"):
-            session_data = {
-                "Field": ["Session Date", "Language", "Work Item", "Skill", "Category Type", 
-                         "Category Name", "Category Source", "Difficulty", "Status", 
-                         "Hours Spent", "Target Hours", "Tags", "Notes"],
-                "Value": [str(session_date), language, work_item or "Not set", skill or "Not set",
-                         category_type, category_name or "Not set", category_source or "Not set",
-                         difficulty, status, hours_spent, target_hours, 
-                         tags or "No tags", notes or "No notes"]
-            }
-            
-            df = pd.DataFrame(session_data)
-            st.dataframe(df, use_container_width=True, hide_index=True)
+        # Get unique skills
+        skills_tracked = len(set([s.get("skill", "") for s in st.session_state.learning_sessions if s.get("skill")]))
         
-        # Statistics
-        st.markdown("### Quick Stats")
+        # Calculate streak
+        if st.session_state.learning_sessions:
+            recent_dates = [s['date'] for s in st.session_state.learning_sessions]
+            unique_dates = len(set(recent_dates))
+        else:
+            unique_dates = 0
+        
+        # Display stats
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:
-            st.metric("Total Sessions", "0")
+            st.metric("Total Sessions", total_sessions)
         with col2:
-            st.metric("Hours Logged", "0.0")
+            st.metric("Hours Logged", f"{total_hours:.1f}")
         with col3:
-            st.metric("Current Streak", "0 days")
+            st.metric("Learning Days", unique_dates)
         with col4:
-            st.metric("Skills Tracked", "0")
+            st.metric("Skills Tracked", skills_tracked)
+        
+        st.markdown("---")
+        
+        # Recent sessions display
+        if st.session_state.learning_sessions:
+            st.markdown("### 📚 Recent Sessions")
+            
+            # Show last 5 sessions
+            recent_sessions = list(reversed(st.session_state.learning_sessions[-5:]))
+            
+            for session in recent_sessions:
+                with st.expander(f"{session['date']} - {session.get('skill', session.get('topic', 'Untitled'))} ({session['technology']})"):
+                    col_info, col_progress = st.columns([2, 1])
+                    
+                    with col_info:
+                        st.write(f"**Work Item:** {session.get('work_item', 'N/A')}")
+                        st.write(f"**Technology:** {session['technology']}")
+                        st.write(f"**Category:** {session.get('category_type', 'N/A')} - {session.get('category_name', 'N/A')}")
+                        st.write(f"**Source:** {session.get('category_source', 'N/A')}")
+                        st.write(f"**Difficulty:** {session['difficulty']}")
+                        st.write(f"**Status:** {session['status']}")
+                    
+                    with col_progress:
+                        st.metric("Hours", session['hours'])
+                        st.metric("Target", session.get('target_hours', 0))
+                        progress_val = session.get('progress', 0) / 100
+                        st.progress(progress_val, text=f"{session.get('progress', 0)}%")
+                    
+                    if session.get('tags'):
+                        st.write(f"**Tags:** {session['tags']}")
+                    
+                    if session.get('notes'):
+                        st.write(f"**Notes:** {session['notes']}")
+            
+            # Link to dashboard
+            st.markdown("---")
+            if st.button("📊 View Full Analytics Dashboard", type="secondary"):
+                st.session_state.current_page = "clean_dashboard"
+                st.rerun()
+        
+        else:
+            st.info("No sessions recorded yet. Use the form on the left to add your first learning session!")
+            
+            # Sample session preview
+            st.markdown("### 📋 Session Preview")
+            st.markdown("""
+            <div style="background: linear-gradient(135deg, #16213e 0%, #1a1a2e 100%); padding: 1rem; border-radius: 10px; border: 1px solid #C0C0C0;">
+                <p style="color: #FFD700; margin: 0;"><strong>Your sessions will appear here once saved</strong></p>
+                <p style="color: #C0C0C0; margin: 0.5rem 0 0 0; font-size: 0.9rem;">
+                    Fill out the form and click "Save Session" to start tracking your learning journey.
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
 
 def main():
     """Main Streamlit application function."""
