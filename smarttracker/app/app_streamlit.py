@@ -219,6 +219,11 @@ def show_home_page():
             {"name": "Pydantic", "category": "Data Validation"}
         ]
     
+    # Tech stack in a styled box
+    st.markdown("""
+    <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); padding: 2rem; border-radius: 15px; border: 2px solid #FFD700; margin: 1rem 0;">
+    """, unsafe_allow_html=True)
+    
     # Tech stack header with update button
     col_title, col_button = st.columns([3, 1])
     
@@ -233,32 +238,28 @@ def show_home_page():
             st.rerun()
     
     # Display current tech stack using dynamic Streamlit components
-    with st.container():
-        st.markdown("""
-        <div class="stats-container">
-        """, unsafe_allow_html=True)
+    # Create rows of technologies (4 per row)
+    tech_stack = st.session_state.tech_stack
+    rows = [tech_stack[i:i+4] for i in range(0, len(tech_stack), 4)]
+    
+    for row in rows:
+        cols = st.columns(4)
+        for i, tech in enumerate(row):
+            with cols[i]:
+                st.markdown(f"""
+                <div style="text-align: center; padding: 1rem; background: rgba(0, 206, 209, 0.1); border-radius: 8px; margin: 0.25rem;">
+                    <div style="color: #00CED1; font-size: 1.2rem; font-weight: bold; margin-bottom: 0.5rem;">{tech['name']}</div>
+                    <div style="color: #C0C0C0; font-size: 0.8rem;">{tech['category']}</div>
+                </div>
+                """, unsafe_allow_html=True)
         
-        # Create rows of technologies (4 per row)
-        tech_stack = st.session_state.tech_stack
-        rows = [tech_stack[i:i+4] for i in range(0, len(tech_stack), 4)]
-        
-        for row in rows:
-            cols = st.columns(4)
-            for i, tech in enumerate(row):
-                with cols[i]:
-                    st.markdown(f"""
-                    <div style="text-align: center; padding: 1rem;">
-                        <div style="color: #00CED1; font-size: 1.5rem; font-weight: bold;">{tech['name']}</div>
-                        <div style="color: #C0C0C0; font-size: 0.9rem;">{tech['category']}</div>
-                    </div>
-                    """, unsafe_allow_html=True)
-            
-            # Fill empty columns if row is not complete
-            for i in range(len(row), 4):
-                with cols[i]:
-                    st.empty()
-        
-        st.markdown("</div>", unsafe_allow_html=True)
+        # Fill empty columns if row is not complete
+        for i in range(len(row), 4):
+            with cols[i]:
+                st.empty()
+    
+    # Close the container
+    st.markdown("</div>", unsafe_allow_html=True)
     
     # Tech stack update dialog
     if st.session_state.get("show_tech_dialog", False):
