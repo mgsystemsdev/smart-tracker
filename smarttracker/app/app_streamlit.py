@@ -205,10 +205,18 @@ def show_home_page():
     # Initialize tech stack in session state if not exists
     if "tech_stack" not in st.session_state:
         st.session_state.tech_stack = [
-            {"name": "Python 3.11+", "category": "Core Engine"},
+            {"name": "Python 3.11+", "category": "Backend Language"},
+            {"name": "JavaScript ES6+", "category": "Frontend Language"},
+            {"name": "React 18", "category": "UI Framework"},
+            {"name": "Node.js", "category": "Runtime Environment"},
             {"name": "Streamlit", "category": "Web Interface"},
+            {"name": "FastAPI", "category": "API Framework"},
+            {"name": "PostgreSQL", "category": "Database"},
+            {"name": "Docker", "category": "Containerization"},
+            {"name": "Git/GitHub", "category": "Version Control"},
+            {"name": "VS Code", "category": "Development IDE"},
             {"name": "Typer CLI", "category": "Command Line"},
-            {"name": "Pydantic", "category": "Validation"}
+            {"name": "Pydantic", "category": "Data Validation"}
         ]
     
     # Tech stack header with update button
