@@ -77,12 +77,14 @@ class JSONStorage:
                 
                 needs_save = False
                 for tech in tech_stack:
-                    if "category" not in tech:
-                        if "domain" in tech:
-                            tech["category"] = "❓ Uncategorized"
-                            del tech["domain"]
-                        else:
-                            tech["category"] = "❓ Uncategorized"
+                    current_category = tech.get("category", "")
+                    
+                    if current_category not in TECH_CATEGORIES:
+                        tech["category"] = "❓ Uncategorized"
+                        needs_save = True
+                    
+                    if "domain" in tech:
+                        del tech["domain"]
                         needs_save = True
                     
                     if "subsection" in tech:

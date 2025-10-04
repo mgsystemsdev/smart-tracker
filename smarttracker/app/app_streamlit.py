@@ -363,10 +363,7 @@ def show_home_page():
         if loaded_tech_stack:
             st.session_state.tech_stack = loaded_tech_stack
         else:
-            st.session_state.tech_stack = [
-                {"name": "Python", "category": "Language", "goal_hours": 100, "date_added": "2025-10-04"}
-            ]
-            st.session_state.storage.save_tech_stack(st.session_state.tech_stack)
+            st.session_state.tech_stack = []
     
     # Tech stack in a styled box
     st.markdown("""
