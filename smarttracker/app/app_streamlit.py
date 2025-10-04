@@ -20,9 +20,6 @@ logging.basicConfig(
     format="%(asctime)s | %(levelname)s | %(message)s"
 )
 
-# Validation constants
-VALID_TECH = ["Python", "Pandas", "Streamlit", "FastAPI", "SQL", "AI/ML"]
-
 def validate_session(session_date, technology, hours):
     """Validate session data. Returns (is_valid, error_message)."""
     # Check hours
@@ -33,11 +30,33 @@ def validate_session(session_date, technology, hours):
     if session_date > date.today():
         return False, "⚠️ Cannot log sessions for future dates"
     
-    # Check technology
-    if technology not in VALID_TECH:
-        return False, f"⚠️ Technology must be one of: {', '.join(VALID_TECH)}"
+    # Check technology not empty
+    if not technology or not technology.strip():
+        return False, "⚠️ Technology cannot be empty"
     
     return True, ""
+
+def get_tech_list(tech_stack):
+    """Get list of technology names from tech stack."""
+    if not tech_stack:
+        return ["Python", "Pandas", "Streamlit", "FastAPI", "SQL", "AI/ML"]
+    return [tech['name'] for tech in tech_stack]
+
+def ensure_tech_in_stack(technology, tech_stack, storage):
+    """Add technology to tech stack if it doesn't exist."""
+    tech_names = [tech['name'] for tech in tech_stack]
+    if technology not in tech_names:
+        new_tech = {
+            "name": technology,
+            "category": "Library",
+            "goal_hours": 50,
+            "date_added": str(date.today())
+        }
+        tech_stack.append(new_tech)
+        storage.save_tech_stack(tech_stack)
+        logging.info(f"Auto-added technology to stack: {technology}")
+        return True
+    return False
 
 def show_home_page():
     """Display the professional home page with MG System Dev branding."""
@@ -434,11 +453,14 @@ def show_clean_dashboard():
             with st.form(f"edit_form_{edit_index}"):
                 col1, col2 = st.columns(2)
                 
+                # Get available technologies from tech stack
+                tech_list = get_tech_list(st.session_state.tech_stack)
+                
                 with col1:
                     edit_date = st.date_input("Date", value=pd.to_datetime(session['date']).date())
-                    edit_technology = st.selectbox("Technology", 
-                        ["Python", "JavaScript", "React", "Node.js", "Java", "C#", "SQL", "Docker", "AWS", "Other"],
-                        index=["Python", "JavaScript", "React", "Node.js", "Java", "C#", "SQL", "Docker", "AWS", "Other"].index(session.get('technology', 'Python')) if session.get('technology') in ["Python", "JavaScript", "React", "Node.js", "Java", "C#", "SQL", "Docker", "AWS", "Other"] else 0)
+                    st.markdown("**Technology** _(type to add new)_")
+                    edit_technology = st.text_input("tech_edit", value=session.get('technology', ''), label_visibility="collapsed", placeholder="Type technology name...")
+                    st.caption(f"💡 Suggestions: {', '.join(tech_list[:6])}")
                     edit_topic = st.text_input("Topic/Subject", value=session.get('topic', ''))
                     edit_type = st.selectbox("Session Type", ["Coding", "Reading", "Tutorial", "Practice", "Project", "Course"],
                         index=["Coding", "Reading", "Tutorial", "Practice", "Project", "Course"].index(session.get('type', 'Coding')) if session.get('type') in ["Coding", "Reading", "Tutorial", "Practice", "Project", "Course"] else 0)
@@ -462,28 +484,39 @@ def show_clean_dashboard():
                     cancel = st.form_submit_button("❌ Cancel")
                 
                 if submitted:
-                    # Update the session
-                    st.session_state.learning_sessions[edit_index] = {
-                        "date": str(edit_date),
-                        "technology": edit_technology,
-                        "topic": edit_topic,
-                        "work_item": session.get('work_item', edit_topic),
-                        "skill": session.get('skill', edit_topic),
-                        "type": edit_type,
-                        "category_type": session.get('category_type', ''),
-                        "category_name": session.get('category_name', ''),
-                        "category_source": session.get('category_source', ''),
-                        "difficulty": edit_difficulty,
-                        "status": edit_status,
-                        "hours": edit_hours,
-                        "tags": edit_tags,
-                        "notes": edit_notes
-                    }
-                    # Save to JSON
-                    st.session_state.storage.save_sessions(st.session_state.learning_sessions)
-                    st.session_state.editing_session = None
-                    st.success("✅ Session updated successfully!")
-                    st.rerun()
+                    # Validate session
+                    is_valid, error_msg = validate_session(edit_date, edit_technology, edit_hours)
+                    
+                    if not is_valid:
+                        st.error(error_msg)
+                        logging.warning(f"Edit validation failed: {error_msg} | Session #{edit_index}")
+                    else:
+                        # Ensure technology is in stack
+                        ensure_tech_in_stack(edit_technology, st.session_state.tech_stack, st.session_state.storage)
+                        
+                        # Update the session
+                        st.session_state.learning_sessions[edit_index] = {
+                            "date": str(edit_date),
+                            "technology": edit_technology,
+                            "topic": edit_topic,
+                            "work_item": session.get('work_item', edit_topic),
+                            "skill": session.get('skill', edit_topic),
+                            "type": edit_type,
+                            "category_type": session.get('category_type', ''),
+                            "category_name": session.get('category_name', ''),
+                            "category_source": session.get('category_source', ''),
+                            "difficulty": edit_difficulty,
+                            "status": edit_status,
+                            "hours": edit_hours,
+                            "tags": edit_tags,
+                            "notes": edit_notes
+                        }
+                        # Save to JSON
+                        st.session_state.storage.save_sessions(st.session_state.learning_sessions)
+                        logging.info(f"Edited session #{edit_index}: {edit_hours}h {edit_technology} ({edit_date})")
+                        st.session_state.editing_session = None
+                        st.success("✅ Session updated successfully!")
+                        st.rerun()
                 
                 if cancel:
                     st.session_state.editing_session = None
@@ -625,6 +658,9 @@ def show_clean_dashboard():
                         
                         with col_delete:
                             if st.button("🗑️ Delete", key=f"delete_{session_index}", type="secondary"):
+                                # Log before deleting to capture session info
+                                deleted_session = st.session_state.learning_sessions[session_index]
+                                logging.info(f"Deleted session #{session_index}: {deleted_session.get('hours')}h {deleted_session.get('technology')} ({deleted_session.get('date')})")
                                 # Delete the session
                                 st.session_state.learning_sessions.pop(session_index)
                                 # Save to JSON
@@ -743,6 +779,9 @@ def show_clean_dashboard():
                             st.rerun()
                         
                         if st.button("🗑️ Delete", key=f"delete_card_{session_index}"):
+                            # Log before deleting to capture session info
+                            deleted_session = st.session_state.learning_sessions[session_index]
+                            logging.info(f"Deleted session #{session_index}: {deleted_session.get('hours')}h {deleted_session.get('technology')} ({deleted_session.get('date')})")
                             st.session_state.learning_sessions.pop(session_index)
                             st.session_state.storage.save_sessions(st.session_state.learning_sessions)
                             st.success("Session deleted!")
@@ -792,6 +831,8 @@ def show_clean_dashboard():
                     
                     if st.button("🗑️ Clear All Sessions", type="secondary"):
                         if delete_confirmation == "DELETE":
+                            session_count = len(st.session_state.learning_sessions)
+                            logging.warning(f"Cleared all sessions: {session_count} sessions deleted")
                             st.session_state.learning_sessions = []
                             # Save empty list to JSON file
                             st.session_state.storage.save_sessions([])
@@ -827,10 +868,15 @@ def show_learning_tracker():
     with col_left:
         st.subheader("📝 Session Entry")
         
+        # Get available technologies from tech stack
+        tech_list = get_tech_list(st.session_state.tech_stack)
+        
         with st.form("smart_tracker_form"):
             # Form fields matching the desktop app
             session_date = st.date_input("Session Date", value=date.today())
-            technology = st.selectbox("Technology", VALID_TECH)
+            st.markdown("**Technology** _(type to add new)_")
+            technology = st.text_input("tech_add", label_visibility="collapsed", placeholder="Type technology name...")
+            st.caption(f"💡 Suggestions: {', '.join(tech_list[:6])}")
             work_item = st.text_input("Work Item", placeholder="Enter project or resource...")
             skill = st.text_input("Skill/Topic", placeholder="Enter specific skill or topic...")
             
@@ -858,6 +904,9 @@ def show_learning_tracker():
                     st.error(error_msg)
                     logging.warning(f"Validation failed: {error_msg} | Date: {session_date}, Tech: {technology}, Hours: {hours_spent}")
                 else:
+                    # Ensure technology is in stack
+                    ensure_tech_in_stack(technology, st.session_state.tech_stack, st.session_state.storage)
+                    
                     # Create session object compatible with dashboard
                     new_session = {
                         "date": str(session_date),
