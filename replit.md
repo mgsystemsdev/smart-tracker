@@ -55,4 +55,8 @@ The application follows a layered architecture pattern with clear separation of 
 ### Development Tools
 - **pytest**: Testing framework (structure prepared in `tests/` directory)
 
-Note: The application currently has no database dependencies but is architected to easily accommodate data storage solutions in the domain layer.
+### Data Persistence
+- **JSON Storage**: Learning sessions and tech stack configuration persist across sessions
+- **File-based Storage**: Data saved to `data/` directory (excluded from git)
+- **Automatic Backup**: Backup functionality available through storage module
+- **Session Recovery**: All data automatically loaded on app startup

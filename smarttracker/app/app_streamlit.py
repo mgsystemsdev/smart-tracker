@@ -8,6 +8,7 @@ import streamlit as st
 import pandas as pd
 from datetime import date
 from smarttracker import __version__
+from smarttracker.domain.storage import JSONStorage
 
 def show_home_page():
     """Display the professional home page with MG System Dev branding."""
@@ -289,6 +290,8 @@ def show_home_page():
                             "name": new_tech_name,
                             "category": new_tech_category
                         })
+                        # Save to JSON file
+                        st.session_state.storage.save_tech_stack(st.session_state.tech_stack)
                         st.success(f"Added {new_tech_name} to your tech stack!")
                         st.rerun()
                     else:
@@ -432,6 +435,10 @@ def show_clean_dashboard():
     
     with col_left:
         if st.session_state.learning_sessions:
+            # Ensure filtered_sessions exists
+            if 'filtered_sessions' not in locals():
+                filtered_sessions = st.session_state.learning_sessions
+            
             # Show filtered results count
             total_sessions = len(st.session_state.learning_sessions)
             filtered_count = len(filtered_sessions)
@@ -613,11 +620,13 @@ def show_clean_dashboard():
                 # Reorder columns for better display
                 display_columns = ['date', 'technology', 'topic', 'type', 'difficulty', 'hours', 'status', 'progress']
                 df_display = df[display_columns]
-                st.dataframe(df_display, width=None, height=300)
+                st.dataframe(df_display, height=300)
                 
                 # Clear all sessions button
                 if st.button("🗑️ Clear All Sessions", help="This will delete all your learning sessions"):
                     st.session_state.learning_sessions = []
+                    # Save empty list to JSON file
+                    st.session_state.storage.save_sessions([])
                     st.success("All sessions cleared!")
                     st.rerun()
 
@@ -696,6 +705,8 @@ def show_learning_tracker():
                 }
                 
                 st.session_state.learning_sessions.append(new_session)
+                # Save to JSON file
+                st.session_state.storage.save_sessions(st.session_state.learning_sessions)
                 st.success(f"✅ Session saved: {skill or work_item} ({technology})")
                 st.balloons()
                 st.rerun()
@@ -800,9 +811,24 @@ def main():
         initial_sidebar_state="expanded"
     )
     
+    # Initialize JSON storage
+    if "storage" not in st.session_state:
+        st.session_state.storage = JSONStorage()
+    
     # Initialize session state
     if "current_page" not in st.session_state:
         st.session_state.current_page = "home"
+    
+    # Load learning sessions from JSON file
+    if "learning_sessions" not in st.session_state:
+        st.session_state.learning_sessions = st.session_state.storage.load_sessions()
+    
+    # Load tech stack from JSON file
+    if "tech_stack_loaded" not in st.session_state:
+        loaded_tech_stack = st.session_state.storage.load_tech_stack()
+        if loaded_tech_stack:
+            st.session_state.tech_stack = loaded_tech_stack
+        st.session_state.tech_stack_loaded = True
     
     # Main header with MG branding
     st.markdown("""
