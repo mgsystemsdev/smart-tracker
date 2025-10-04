@@ -18,6 +18,14 @@ Preferred communication style: Simple, everyday language.
 - **Auto-Migration**: Existing technologies automatically assigned "Uncategorized" domain on first load, can be reassigned via management UI
 - **Data Model Update**: Tech stack JSON now includes "domain" and "subsection" fields for future planning features
 
+### Planning Page - Complete Learning Roadmap
+- **Comprehensive Curriculum**: Detailed breakdown of all 6 skill domains with subsections (Front-End, Back-End, Deployment, Core Libraries, Visualization, ML, etc.)
+- **Hour Range Planning**: Each tool shows recommended min-max hours (e.g., "React: 70-90h")
+- **Subsection Subtotals**: Automatic calculation of subtotals for each subsection (e.g., "Front-End → 185–255h")
+- **Domain Totals**: Shows total hours required per domain (e.g., "Full-Stack Total → 490–665h")
+- **Grand Total Summary**: Complete overview showing 1,335–1,835 total hours across all domains
+- **Reference Blueprint**: Static planning guide to complement the dynamic Tech Stack progress tracking
+
 ### Data Integrity & Logging Implementation
 - **Input Validation**: Hours must be 0-12, no future dates, technology cannot be empty
 - **Activity Logging**: All CRUD operations logged to /logs/activity.log with timestamps
