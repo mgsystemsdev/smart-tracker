@@ -6,9 +6,38 @@ A web-based interface for the Smart Tracker application using Streamlit.
 
 import streamlit as st
 import pandas as pd
-from datetime import date
+from datetime import date, datetime
+import logging
+import os
 from smarttracker import __version__
 from smarttracker.domain.storage import JSONStorage
+
+# Setup logging
+os.makedirs("logs", exist_ok=True)
+logging.basicConfig(
+    filename="logs/activity.log",
+    level=logging.INFO,
+    format="%(asctime)s | %(levelname)s | %(message)s"
+)
+
+# Validation constants
+VALID_TECH = ["Python", "Pandas", "Streamlit", "FastAPI", "SQL", "AI/ML"]
+
+def validate_session(session_date, technology, hours):
+    """Validate session data. Returns (is_valid, error_message)."""
+    # Check hours
+    if hours <= 0 or hours > 12:
+        return False, "⚠️ Hours must be between 0 and 12"
+    
+    # Check future date
+    if session_date > date.today():
+        return False, "⚠️ Cannot log sessions for future dates"
+    
+    # Check technology
+    if technology not in VALID_TECH:
+        return False, f"⚠️ Technology must be one of: {', '.join(VALID_TECH)}"
+    
+    return True, ""
 
 def show_home_page():
     """Display the professional home page with MG System Dev branding."""
@@ -801,7 +830,7 @@ def show_learning_tracker():
         with st.form("smart_tracker_form"):
             # Form fields matching the desktop app
             session_date = st.date_input("Session Date", value=date.today())
-            technology = st.selectbox("Technology", ["Python", "JavaScript", "Java", "C#", "React", "Node.js", "SQL", "Docker", "AWS", "Other"])
+            technology = st.selectbox("Technology", VALID_TECH)
             work_item = st.text_input("Work Item", placeholder="Enter project or resource...")
             skill = st.text_input("Skill/Topic", placeholder="Enter specific skill or topic...")
             
@@ -822,30 +851,38 @@ def show_learning_tracker():
             submitted = st.form_submit_button("💾 Save Session", type="primary")
             
             if submitted:
-                # Create session object compatible with dashboard
-                new_session = {
-                    "date": str(session_date),
-                    "technology": technology,
-                    "topic": skill or work_item,  # Use skill as topic, fallback to work_item
-                    "work_item": work_item,
-                    "skill": skill,
-                    "type": session_type,
-                    "category_type": category_type,
-                    "category_name": category_name,
-                    "category_source": category_source,
-                    "difficulty": difficulty,
-                    "status": status,
-                    "hours": hours_spent,
-                    "tags": tags,
-                    "notes": notes
-                }
+                # Validate session
+                is_valid, error_msg = validate_session(session_date, technology, hours_spent)
                 
-                st.session_state.learning_sessions.append(new_session)
-                # Save to JSON file
-                st.session_state.storage.save_sessions(st.session_state.learning_sessions)
-                st.success(f"✅ Session saved: {skill or work_item} ({technology})")
-                st.balloons()
-                st.rerun()
+                if not is_valid:
+                    st.error(error_msg)
+                    logging.warning(f"Validation failed: {error_msg} | Date: {session_date}, Tech: {technology}, Hours: {hours_spent}")
+                else:
+                    # Create session object compatible with dashboard
+                    new_session = {
+                        "date": str(session_date),
+                        "technology": technology,
+                        "topic": skill or work_item,  # Use skill as topic, fallback to work_item
+                        "work_item": work_item,
+                        "skill": skill,
+                        "type": session_type,
+                        "category_type": category_type,
+                        "category_name": category_name,
+                        "category_source": category_source,
+                        "difficulty": difficulty,
+                        "status": status,
+                        "hours": hours_spent,
+                        "tags": tags,
+                        "notes": notes
+                    }
+                    
+                    st.session_state.learning_sessions.append(new_session)
+                    # Save to JSON file
+                    st.session_state.storage.save_sessions(st.session_state.learning_sessions)
+                    logging.info(f"Added session: {hours_spent}h {technology} ({session_date})")
+                    st.success(f"✅ Session saved: {skill or work_item} ({technology})")
+                    st.balloons()
+                    st.rerun()
         
         # Status indicator
         st.markdown("""
