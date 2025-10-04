@@ -222,19 +222,6 @@ def show_home_page():
                     <div style="color: #C0C0C0; font-size: 0.8rem;">{tech['category']}</div>
                 </div>
                 """, unsafe_allow_html=True)
-                
-                # Edit and Delete buttons
-                btn_col1, btn_col2 = st.columns(2)
-                with btn_col1:
-                    if st.button("✏️", key=f"edit_tech_{tech_index}", help=f"Edit {tech['name']}"):
-                        st.session_state.editing_tech = tech_index
-                        st.rerun()
-                with btn_col2:
-                    if st.button("🗑️", key=f"delete_tech_{tech_index}", help=f"Delete {tech['name']}"):
-                        st.session_state.tech_stack.pop(tech_index)
-                        st.session_state.storage.save_tech_stack(st.session_state.tech_stack)
-                        st.success(f"Deleted {tech['name']} from tech stack!")
-                        st.rerun()
         
         # Fill empty columns if row is not complete
         for i in range(len(row), 4):
@@ -332,7 +319,6 @@ def show_home_page():
                         if any(existing['name'].lower() == new_tech_name.lower() for existing in st.session_state.tech_stack):
                             st.error(f"Technology '{new_tech_name}' already exists in your tech stack!")
                         else:
-                            from datetime import date
                             st.session_state.tech_stack.append({
                                 "name": new_tech_name,
                                 "category": new_tech_category,
@@ -352,20 +338,26 @@ def show_home_page():
                     st.rerun()
             
             # Manage existing technologies
-            if len(st.session_state.tech_stack) > 4:  # Show management only if there are added technologies
-                st.markdown("#### Manage Existing Technologies")
+            st.markdown("#### Manage Existing Technologies")
+            
+            for i, tech in enumerate(st.session_state.tech_stack):
+                col_tech, col_edit, col_delete = st.columns([4, 1, 1])
                 
-                for i, tech in enumerate(st.session_state.tech_stack[4:], start=4):  # Skip the default 4
-                    col_tech, col_remove = st.columns([3, 1])
-                    
-                    with col_tech:
-                        st.write(f"**{tech['name']}** - *{tech['category']}*")
-                    
-                    with col_remove:
-                        if st.button(f"🗑️", key=f"remove_{i}", help=f"Remove {tech['name']}"):
-                            st.session_state.tech_stack.pop(i)
-                            st.success(f"Removed {tech['name']} from your tech stack!")
-                            st.rerun()
+                with col_tech:
+                    st.write(f"**{tech['name']}** - *{tech['category']}* - Goal: {tech.get('goal_hours', 0)} hours")
+                
+                with col_edit:
+                    if st.button("✏️", key=f"dialog_edit_{i}", help=f"Edit {tech['name']}"):
+                        st.session_state.editing_tech = i
+                        st.session_state.show_tech_dialog = False
+                        st.rerun()
+                
+                with col_delete:
+                    if st.button("🗑️", key=f"dialog_delete_{i}", help=f"Delete {tech['name']}"):
+                        st.session_state.tech_stack.pop(i)
+                        st.session_state.storage.save_tech_stack(st.session_state.tech_stack)
+                        st.success(f"Deleted {tech['name']} from tech stack!")
+                        st.rerun()
             
             st.markdown("</div>", unsafe_allow_html=True)
     
