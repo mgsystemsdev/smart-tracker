@@ -2,11 +2,25 @@
 
 ## Overview
 
-Smart Tracker is a flexible tracking application designed with a dual-interface architecture. It provides both a modern web interface built with Streamlit and a powerful command-line interface using Typer. The application follows a clean, modular package structure that separates concerns between the domain layer (business logic) and application layer (user interfaces). Currently implemented as a scaffold, it's ready for extension with specific tracking features and capabilities.
+Smart Tracker is a minimal personal learning tracker featuring a simplified workflow: just log your work and see your progress automatically. Built with a dual-interface architecture, it provides both a modern Streamlit web interface and a Typer CLI. The tracker eliminates manual progress tracking - progress is automatically calculated from hours logged. Features MG System Dev branding with golden yellow accents and a dark tech theme.
 
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+
+## Recent Changes (October 4, 2025)
+
+### Simplified Progress Tracking
+- **Removed Manual Progress**: No more progress sliders or target hours - progress auto-calculates from logged hours
+- **Card-Based Dashboard**: Replaced complex charts with simple expandable cards grouped by technology
+- **Minimal Tech Stack**: Starts with just Python (Language category), user adds technologies as they progress
+- **Categories**: Technologies organized as "Language" or "Library"
+
+### Dashboard Features
+- **Expandable Cards**: Each technology shows total hours, session count, and last session date
+- **Full Session Details**: Cards expand to show all sessions with complete information (date, topic, notes, tags, type, difficulty, status, hours)
+- **Inline Actions**: Edit and Delete buttons within expanded cards for easy management
+- **Auto-Update**: Cards refresh automatically when sessions are added, edited, or deleted
 
 ## System Architecture
 
