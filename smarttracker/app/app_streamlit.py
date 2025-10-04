@@ -10,7 +10,7 @@ from datetime import date, datetime
 import logging
 import os
 from smarttracker import __version__
-from smarttracker.domain.storage import JSONStorage, SKILL_DOMAINS
+from smarttracker.domain.storage import JSONStorage, TECH_CATEGORIES
 
 # Setup logging
 os.makedirs("logs", exist_ok=True)
@@ -174,21 +174,19 @@ def get_tech_list(tech_stack):
         return ["Python", "Pandas", "Streamlit", "FastAPI", "SQL", "AI/ML"]
     return [tech['name'] for tech in tech_stack]
 
-def ensure_tech_in_stack(technology, tech_stack, storage, domain="❓ Uncategorized"):
+def ensure_tech_in_stack(technology, tech_stack, storage, category="❓ Uncategorized"):
     """Add technology to tech stack if it doesn't exist."""
     tech_names = [tech['name'] for tech in tech_stack]
     if technology not in tech_names:
         new_tech = {
             "name": technology,
-            "category": "Library",
+            "category": category,
             "goal_hours": 50,
-            "date_added": str(date.today()),
-            "domain": domain,
-            "subsection": None
+            "date_added": str(date.today())
         }
         tech_stack.append(new_tech)
         storage.save_tech_stack(tech_stack)
-        logging.info(f"Auto-added technology to stack: {technology} in domain: {domain}")
+        logging.info(f"Auto-added technology to stack: {technology} in category: {category}")
         return True
     return False
 
@@ -1038,35 +1036,35 @@ def show_tech_stack_page():
     
     st.markdown("---")
     
-    # Group technologies by domain
-    techs_by_domain = {}
+    # Group technologies by category
+    techs_by_category = {}
     for tech in st.session_state.tech_stack:
-        domain = tech.get('domain', '❓ Uncategorized')
-        if domain not in techs_by_domain:
-            techs_by_domain[domain] = []
-        techs_by_domain[domain].append(tech)
+        category = tech.get('category', '❓ Uncategorized')
+        if category not in techs_by_category:
+            techs_by_category[category] = []
+        techs_by_category[category].append(tech)
     
-    # Display technologies grouped by domain
-    for domain in SKILL_DOMAINS:
-        if domain not in techs_by_domain:
+    # Display technologies grouped by category
+    for category in TECH_CATEGORIES:
+        if category not in techs_by_category:
             continue
         
-        domain_techs = techs_by_domain[domain]
+        category_techs = techs_by_category[category]
         
-        # Calculate domain subtotals
-        domain_goal_hours = sum(tech.get('goal_hours', 0) for tech in domain_techs)
-        domain_hours_logged = 0
-        for tech in domain_techs:
+        # Calculate category subtotals
+        category_goal_hours = sum(tech.get('goal_hours', 0) for tech in category_techs)
+        category_hours_logged = 0
+        for tech in category_techs:
             tech_name = tech['name']
             tech_sessions = [s for s in st.session_state.learning_sessions if s.get('technology') == tech_name]
-            domain_hours_logged += sum(s.get('hours', 0) for s in tech_sessions)
+            category_hours_logged += sum(s.get('hours', 0) for s in tech_sessions)
         
-        domain_completion = (domain_hours_logged / domain_goal_hours * 100) if domain_goal_hours > 0 else 0
+        category_completion = (category_hours_logged / category_goal_hours * 100) if category_goal_hours > 0 else 0
         
-        # Domain header with subtotals
-        with st.expander(f"**{domain}** - {domain_hours_logged:.1f}/{domain_goal_hours:.0f} hrs ({domain_completion:.1f}%)", expanded=True):
+        # Category header with subtotals
+        with st.expander(f"**{category}** - {category_hours_logged:.1f}/{category_goal_hours:.0f} hrs ({category_completion:.1f}%)", expanded=True):
             # Individual Technology Cards
-            for tech in domain_techs:
+            for tech in category_techs:
                 tech_name = tech['name']
                 goal_hours = tech.get('goal_hours', 0)
                 category = tech.get('category', 'Unknown')
@@ -1124,27 +1122,27 @@ def show_tech_stack_page():
                     st.progress(min(progress_pct / 100, 1.0))
                     st.caption(f"📚 {session_count} sessions logged")
                     
-                    # Domain management
+                    # Category management
                     with st.expander("⚙️ Manage Tech Settings", expanded=False):
-                        current_domain = tech.get('domain', '❓ Uncategorized')
-                        current_domain_index = SKILL_DOMAINS.index(current_domain) if current_domain in SKILL_DOMAINS else len(SKILL_DOMAINS) - 1
+                        current_category = tech.get('category', '❓ Uncategorized')
+                        current_category_index = TECH_CATEGORIES.index(current_category) if current_category in TECH_CATEGORIES else len(TECH_CATEGORIES) - 1
                         
-                        new_domain = st.selectbox(
-                            f"Domain for {tech_name}",
-                            SKILL_DOMAINS,
-                            index=current_domain_index,
-                            key=f"domain_selector_{tech_name}"
+                        new_category = st.selectbox(
+                            f"Category for {tech_name}",
+                            TECH_CATEGORIES,
+                            index=current_category_index,
+                            key=f"category_selector_{tech_name}"
                         )
                         
-                        if st.button(f"Update Domain", key=f"update_domain_{tech_name}"):
-                            if new_domain != current_domain:
-                                tech['domain'] = new_domain
+                        if st.button(f"Update Category", key=f"update_category_{tech_name}"):
+                            if new_category != current_category:
+                                tech['category'] = new_category
                                 st.session_state.storage.save_tech_stack(st.session_state.tech_stack)
-                                logging.info(f"Updated domain for {tech_name}: {current_domain} -> {new_domain}")
-                                st.success(f"✅ Moved {tech_name} to {new_domain}")
+                                logging.info(f"Updated category for {tech_name}: {current_category} -> {new_category}")
+                                st.success(f"✅ Moved {tech_name} to {new_category}")
                                 st.rerun()
                             else:
-                                st.info("Domain unchanged")
+                                st.info("Category unchanged")
 
 def show_planning_page():
     """Display the complete learning roadmap with detailed hour breakdowns by subsections."""
@@ -1266,8 +1264,8 @@ def show_learning_tracker():
             technology = st.text_input("tech_add", label_visibility="collapsed", placeholder="Type technology name...")
             st.caption(f"💡 Suggestions: {', '.join(tech_list[:6])}")
             
-            st.markdown("**Skill Domain** _(for new technologies)_")
-            tech_domain = st.selectbox("Select domain for new techs", SKILL_DOMAINS[:-1], label_visibility="collapsed", help="Select which skill domain this technology belongs to if it's new")
+            st.markdown("**Category** _(for new technologies)_")
+            tech_category = st.selectbox("Select category for new techs", TECH_CATEGORIES[:-1], label_visibility="collapsed", help="Select which category this technology belongs to if it's new")
             
             work_item = st.text_input("Work Item", placeholder="Enter project or resource...")
             skill = st.text_input("Skill/Topic", placeholder="Enter specific skill or topic...")
@@ -1296,8 +1294,8 @@ def show_learning_tracker():
                     st.error(error_msg)
                     logging.warning(f"Validation failed: {error_msg} | Date: {session_date}, Tech: {technology}, Hours: {hours_spent}")
                 else:
-                    # Ensure technology is in stack (with specified domain for new techs)
-                    ensure_tech_in_stack(technology, st.session_state.tech_stack, st.session_state.storage, domain=tech_domain)
+                    # Ensure technology is in stack (with specified category for new techs)
+                    ensure_tech_in_stack(technology, st.session_state.tech_stack, st.session_state.storage, category=tech_category)
                     
                     # Create session object compatible with dashboard
                     new_session = {

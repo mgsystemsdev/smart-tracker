@@ -7,12 +7,20 @@ import json
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 
-SKILL_DOMAINS = [
-    "🌐 Core Full-Stack Development",
-    "📊 Data Science & Machine Learning",
-    "📑 Excel Automation & Data Handling",
-    "⚙️ Core Automation (Support Layer)",
-    "🔒 Reliability & Security",
+TECH_CATEGORIES = [
+    "🖥️ Front-End",
+    "⚙️ Back-End",
+    "🔗 Lightweight APIs / Model Serving",
+    "🌉 Integration",
+    "☁️ Deployment",
+    "🧮 Core Libraries",
+    "📈 Visualization",
+    "🤖 Machine Learning",
+    "🔄 Pipelines",
+    "🗄️ Databases",
+    "📑 Excel Automation",
+    "⚙️ Automation",
+    "🔒 Security & Testing",
     "🧰 Supporting Skills",
     "❓ Uncategorized"
 ]
@@ -61,7 +69,7 @@ class JSONStorage:
             return False
     
     def load_tech_stack(self) -> List[Dict[str, Any]]:
-        """Load tech stack from JSON file with automatic migration for domain field."""
+        """Load tech stack from JSON file with automatic migration to category field."""
         try:
             if self.tech_stack_file.exists():
                 with open(self.tech_stack_file, 'r') as f:
@@ -69,11 +77,16 @@ class JSONStorage:
                 
                 needs_save = False
                 for tech in tech_stack:
-                    if "domain" not in tech:
-                        tech["domain"] = "❓ Uncategorized"
+                    if "category" not in tech:
+                        if "domain" in tech:
+                            tech["category"] = "❓ Uncategorized"
+                            del tech["domain"]
+                        else:
+                            tech["category"] = "❓ Uncategorized"
                         needs_save = True
-                    if "subsection" not in tech:
-                        tech["subsection"] = None
+                    
+                    if "subsection" in tech:
+                        del tech["subsection"]
                         needs_save = True
                 
                 if needs_save:
