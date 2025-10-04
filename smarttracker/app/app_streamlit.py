@@ -428,10 +428,10 @@ def show_home_page():
                     edit_tech_name = st.text_input("Technology Name", value=tech.get('name', ''))
                 
                 with col2:
-                    categories = ["Language", "Framework", "Library", "Tool", "Database", "Platform", "Concept"]
-                    current_category = tech.get('category', 'Language')
-                    category_index = categories.index(current_category) if current_category in categories else 0
-                    edit_tech_category = st.selectbox("Category", categories, index=category_index)
+                    all_categories = st.session_state.storage.get_all_categories()
+                    current_category = tech.get('category', all_categories[0])
+                    category_index = all_categories.index(current_category) if current_category in all_categories else 0
+                    edit_tech_category = st.selectbox("Category", all_categories, index=category_index)
                 
                 with col3:
                     edit_goal_hours = st.number_input("Goal Hours", min_value=1, step=1, value=int(tech.get('goal_hours', 100)))
