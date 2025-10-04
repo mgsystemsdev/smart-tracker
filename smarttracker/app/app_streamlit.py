@@ -419,6 +419,9 @@ def show_clean_dashboard():
     # Filters and Sorting Section
     st.markdown("### 🔍 Filters & Sorting")
     
+    # Initialize filtered_sessions
+    filtered_sessions = st.session_state.learning_sessions.copy() if st.session_state.learning_sessions else []
+    
     if st.session_state.learning_sessions:
         # Create filter controls
         col_filter1, col_filter2, col_filter3, col_sort = st.columns(4)
@@ -479,10 +482,6 @@ def show_clean_dashboard():
     
     with col_left:
         if st.session_state.learning_sessions:
-            # Ensure filtered_sessions exists
-            if 'filtered_sessions' not in locals():
-                filtered_sessions = st.session_state.learning_sessions
-            
             # Show filtered results count
             total_sessions = len(st.session_state.learning_sessions)
             filtered_count = len(filtered_sessions)

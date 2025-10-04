@@ -10,17 +10,23 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (October 4, 2025)
 
-### Simplified Progress Tracking
-- **Removed Manual Progress**: No more progress sliders or target hours - progress auto-calculates from logged hours
-- **Card-Based Dashboard**: Replaced complex charts with simple expandable cards grouped by technology
-- **Minimal Tech Stack**: Starts with just Python (Language category), user adds technologies as they progress
-- **Categories**: Technologies organized as "Language" or "Library"
+### Technology Object Model with Goal-Based Progress
+- **Tech Stack Objects**: Each technology is now a full object with name, category, goal_hours, and date_added
+- **Expanded Categories**: Seven category types - Language, Framework, Library, Tool, Database, Platform, Concept
+- **Goal Hours**: Set target hours when adding technologies to track progress toward mastery
+- **Auto-Progress Calculation**: Progress = (logged hours / goal hours) × 100 - fully automatic based on session hours
+- **Persistent Storage**: Tech stack saves to tech_stack.json with all properties
 
 ### Dashboard Features
-- **Expandable Cards**: Each technology shows total hours, session count, and last session date
-- **Full Session Details**: Cards expand to show all sessions with complete information (date, topic, notes, tags, type, difficulty, status, hours)
-- **Inline Actions**: Edit and Delete buttons within expanded cards for easy management
+- **Progress Bars**: Each technology card shows visual progress bar with "40/100 hrs (40%)" format
+- **Expandable Cards**: Cards show total hours, session count, last date - expand for full session details
+- **Full Session Details**: All session information displayed (date, topic, notes, tags, type, difficulty, status, hours)
+- **Inline Actions**: Edit and Delete buttons within expanded cards
 - **Auto-Update**: Cards refresh automatically when sessions are added, edited, or deleted
+
+### UI Improvements
+- **Dashboard Renamed**: "Clean Dashboard" simplified to just "Dashboard"
+- **Demo Section Removed**: Cleaned up home page by removing system demo buttons
 
 ## System Architecture
 
