@@ -474,6 +474,28 @@ def show_home_page():
             
             st.markdown("### ⚙️ Update Tech Stack")
             
+            # Add custom category section
+            st.markdown("#### 🏷️ Add Custom Category")
+            col_cat_input, col_cat_add = st.columns([3, 1])
+            
+            with col_cat_input:
+                new_category_name = st.text_input("New Category Name", placeholder="e.g., Mobile Development, Cloud Services", key="new_category_input")
+            
+            with col_cat_add:
+                st.write("")
+                st.write("")
+                if st.button("➕ Add Category", type="secondary"):
+                    if new_category_name and new_category_name.strip():
+                        if st.session_state.storage.add_custom_category(new_category_name):
+                            st.success(f"✅ Added category: {new_category_name}")
+                            st.rerun()
+                        else:
+                            st.error("Category already exists or is invalid!")
+                    else:
+                        st.error("Please enter a category name.")
+            
+            st.markdown("---")
+            
             # Add new technology
             st.markdown("#### Add New Technology")
             col_name, col_cat, col_goal = st.columns(3)
@@ -482,7 +504,8 @@ def show_home_page():
                 new_tech_name = st.text_input("Technology Name", placeholder="e.g., Streamlit, JavaScript, SQL")
             
             with col_cat:
-                new_tech_category = st.selectbox("Category", ["Language", "Framework", "Library", "Tool", "Database", "Platform", "Concept"])
+                all_categories = st.session_state.storage.get_all_categories()
+                new_tech_category = st.selectbox("Category", all_categories)
             
             with col_goal:
                 new_goal_hours = st.number_input("Goal Hours", min_value=1, step=1, value=100)
