@@ -991,6 +991,28 @@ def show_tech_stack_page():
                     # Progress bar
                     st.progress(min(progress_pct / 100, 1.0))
                     st.caption(f"📚 {session_count} sessions logged")
+                    
+                    # Domain management
+                    with st.expander("⚙️ Manage Tech Settings", expanded=False):
+                        current_domain = tech.get('domain', '❓ Uncategorized')
+                        current_domain_index = SKILL_DOMAINS.index(current_domain) if current_domain in SKILL_DOMAINS else len(SKILL_DOMAINS) - 1
+                        
+                        new_domain = st.selectbox(
+                            f"Domain for {tech_name}",
+                            SKILL_DOMAINS,
+                            index=current_domain_index,
+                            key=f"domain_selector_{tech_name}"
+                        )
+                        
+                        if st.button(f"Update Domain", key=f"update_domain_{tech_name}"):
+                            if new_domain != current_domain:
+                                tech['domain'] = new_domain
+                                st.session_state.storage.save_tech_stack(st.session_state.tech_stack)
+                                logging.info(f"Updated domain for {tech_name}: {current_domain} -> {new_domain}")
+                                st.success(f"✅ Moved {tech_name} to {new_domain}")
+                                st.rerun()
+                            else:
+                                st.info("Domain unchanged")
 
 def show_learning_tracker():
     """Display the Smart Learning Tracker interface."""
