@@ -743,22 +743,29 @@ def show_clean_dashboard():
                     edit_date = st.date_input("Date", value=pd.to_datetime(session['date']).date())
                     st.markdown("**Technology**")
                     current_tech = session.get('technology', '')
-                    tech_options_edit = tech_list + ["➕ Add New Technology..."]
                     
-                    # Set default index based on current technology
-                    if current_tech in tech_list:
-                        default_index = tech_list.index(current_tech)
+                    if not tech_list:
+                        # No technologies in stack, use text input
+                        edit_technology = st.text_input("tech_edit_input", value=current_tech, label_visibility="collapsed", placeholder="Type technology name...", key=f"tech_edit_input_{edit_index}")
                     else:
-                        tech_options_edit = [current_tech] + tech_options_edit
-                        default_index = 0
-                    
-                    edit_technology_select = st.selectbox("tech_select_edit", tech_options_edit, index=default_index, label_visibility="collapsed", key=f"tech_edit_{edit_index}")
-                    
-                    # If user wants to add new, show text input
-                    if edit_technology_select == "➕ Add New Technology...":
-                        edit_technology = st.text_input("Type new technology name", placeholder="e.g., Python, React, Docker...", key=f"new_tech_edit_{edit_index}")
-                    else:
-                        edit_technology = edit_technology_select
+                        tech_options_edit = tech_list + ["➕ Add New Technology..."]
+                        
+                        # Set default index based on current technology
+                        if current_tech in tech_list:
+                            default_index = tech_list.index(current_tech)
+                        else:
+                            tech_options_edit = [current_tech] + tech_options_edit
+                            default_index = 0
+                        
+                        edit_technology_select = st.selectbox("tech_select_edit", tech_options_edit, index=default_index, label_visibility="collapsed", key=f"tech_edit_{edit_index}")
+                        
+                        # If user wants to add new, show text input
+                        if edit_technology_select == "➕ Add New Technology...":
+                            edit_technology = st.text_input("Type new technology name", placeholder="e.g., Python, React, Docker...", key=f"new_tech_edit_{edit_index}")
+                            if not edit_technology or not edit_technology.strip():
+                                edit_technology = None  # Will fail validation
+                        else:
+                            edit_technology = edit_technology_select
                     edit_topic = st.text_input("Topic/Subject", value=session.get('topic', ''))
                     edit_type = st.selectbox("Session Type", ["Coding", "Reading", "Tutorial", "Practice", "Project", "Course"],
                         index=["Coding", "Reading", "Tutorial", "Practice", "Project", "Course"].index(session.get('type', 'Coding')) if session.get('type') in ["Coding", "Reading", "Tutorial", "Practice", "Project", "Course"] else 0)
@@ -1490,14 +1497,21 @@ def show_learning_tracker():
             # Form fields matching the desktop app
             session_date = st.date_input("Session Date", value=date.today())
             st.markdown("**Technology**")
-            tech_options = tech_list + ["➕ Add New Technology..."]
-            technology_select = st.selectbox("tech_select", tech_options, label_visibility="collapsed")
             
-            # If user wants to add new, show text input
-            if technology_select == "➕ Add New Technology...":
-                technology = st.text_input("Type new technology name", placeholder="e.g., Python, React, Docker...", key="new_tech_input")
+            # If no technologies yet, show text input directly
+            if not tech_list:
+                technology = st.text_input("tech_input", placeholder="Type technology name (e.g., Python, React, Docker...)", label_visibility="collapsed")
             else:
-                technology = technology_select
+                tech_options = tech_list + ["➕ Add New Technology..."]
+                technology_select = st.selectbox("tech_select", tech_options, label_visibility="collapsed")
+                
+                # If user wants to add new, show text input
+                if technology_select == "➕ Add New Technology...":
+                    technology = st.text_input("Type new technology name", placeholder="e.g., Python, React, Docker...", key="new_tech_input")
+                    if not technology or not technology.strip():
+                        technology = None  # Will fail validation with clear message
+                else:
+                    technology = technology_select
             
             st.markdown("**Category** _(for new technologies)_")
             all_cats = st.session_state.storage.get_all_categories()
