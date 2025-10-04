@@ -36,6 +36,7 @@ class JSONStorage:
         
         self.sessions_file = self.data_dir / "learning_sessions.json"
         self.tech_stack_file = self.data_dir / "tech_stack.json"
+        self.custom_categories_file = self.data_dir / "custom_categories.json"
     
     def save_sessions(self, sessions: List[Dict[str, Any]]) -> bool:
         """Save learning sessions to JSON file."""
@@ -75,11 +76,12 @@ class JSONStorage:
                 with open(self.tech_stack_file, 'r') as f:
                     tech_stack = json.load(f)
                 
+                all_categories = self.get_all_categories()
                 needs_save = False
                 for tech in tech_stack:
                     current_category = tech.get("category", "")
                     
-                    if current_category not in TECH_CATEGORIES:
+                    if current_category not in all_categories:
                         tech["category"] = "❓ Uncategorized"
                         needs_save = True
                     
@@ -120,3 +122,50 @@ class JSONStorage:
             shutil.copy2(self.tech_stack_file, backup_dir / "tech_stack.json")
         
         return str(backup_dir)
+    
+    def save_custom_categories(self, custom_categories: List[str]) -> bool:
+        """Save custom categories to JSON file."""
+        try:
+            with open(self.custom_categories_file, 'w') as f:
+                json.dump(custom_categories, f, indent=2)
+            return True
+        except Exception as e:
+            print(f"Error saving custom categories: {e}")
+            return False
+    
+    def load_custom_categories(self) -> List[str]:
+        """Load custom categories from JSON file."""
+        try:
+            if self.custom_categories_file.exists():
+                with open(self.custom_categories_file, 'r') as f:
+                    return json.load(f)
+            return []
+        except Exception as e:
+            print(f"Error loading custom categories: {e}")
+            return []
+    
+    def get_all_categories(self) -> List[str]:
+        """Get all categories: hardcoded TECH_CATEGORIES + custom categories."""
+        custom_cats = self.load_custom_categories()
+        all_cats = TECH_CATEGORIES.copy()
+        
+        for cat in custom_cats:
+            if cat not in all_cats:
+                all_cats.insert(-1, cat)
+        
+        return all_cats
+    
+    def add_custom_category(self, category_name: str) -> bool:
+        """Add a new custom category if it doesn't exist."""
+        if not category_name or not category_name.strip():
+            return False
+        
+        category_name = category_name.strip()
+        
+        all_categories = self.get_all_categories()
+        if category_name in all_categories:
+            return False
+        
+        custom_categories = self.load_custom_categories()
+        custom_categories.append(category_name)
+        return self.save_custom_categories(custom_categories)
