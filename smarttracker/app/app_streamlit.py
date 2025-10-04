@@ -421,6 +421,19 @@ def show_home_page():
             
             st.markdown("### ✏️ Edit Technology")
             
+            # Quick add category (outside form)
+            with st.expander("➕ Add New Category", expanded=False):
+                new_cat_edit = st.text_input("New category name", key="quick_cat_edit", placeholder="e.g., Mobile Development")
+                if st.button("Add Category", key="quick_cat_btn_edit"):
+                    if new_cat_edit and new_cat_edit.strip():
+                        if st.session_state.storage.add_custom_category(new_cat_edit):
+                            st.success(f"✅ Added: {new_cat_edit}")
+                            st.rerun()
+                        else:
+                            st.error("Category already exists!")
+                    else:
+                        st.error("Please enter a category name.")
+            
             with st.form(f"edit_tech_form_{edit_tech_index}"):
                 col1, col2, col3 = st.columns(3)
                 
@@ -505,7 +518,23 @@ def show_home_page():
             
             with col_cat:
                 all_categories = st.session_state.storage.get_all_categories()
-                new_tech_category = st.selectbox("Category", all_categories)
+                category_options = all_categories + ["➕ Add New Category..."]
+                new_tech_category = st.selectbox("Category", category_options)
+            
+            # If user selected "Add New Category...", show input
+            if new_tech_category == "➕ Add New Category...":
+                inline_new_category = st.text_input("Enter new category name", key="inline_cat_home", placeholder="e.g., Mobile Development")
+                if st.button("Add This Category", key="inline_add_btn_home"):
+                    if inline_new_category and inline_new_category.strip():
+                        if st.session_state.storage.add_custom_category(inline_new_category):
+                            st.success(f"✅ Added: {inline_new_category}")
+                            new_tech_category = inline_new_category
+                            st.rerun()
+                        else:
+                            st.error("Category already exists!")
+                    else:
+                        st.error("Please enter a category name.")
+                new_tech_category = None  # Don't allow adding tech with placeholder
             
             with col_goal:
                 new_goal_hours = st.number_input("Goal Hours", min_value=1, step=1, value=100)
@@ -1145,6 +1174,22 @@ def show_tech_stack_page():
                     
                     # Category management
                     with st.expander("⚙️ Manage Tech Settings", expanded=False):
+                        # Quick add new category
+                        st.markdown("**Add New Category**")
+                        col_cat_input, col_cat_btn = st.columns([3, 1])
+                        with col_cat_input:
+                            new_cat_inline = st.text_input("Category name", key=f"inline_cat_{tech_name}", placeholder="e.g., Mobile", label_visibility="collapsed")
+                        with col_cat_btn:
+                            if st.button("➕", key=f"inline_cat_btn_{tech_name}", help="Add category"):
+                                if new_cat_inline and new_cat_inline.strip():
+                                    if st.session_state.storage.add_custom_category(new_cat_inline):
+                                        st.success(f"✅ Added: {new_cat_inline}")
+                                        st.rerun()
+                                    else:
+                                        st.error("Already exists!")
+                        
+                        st.markdown("---")
+                        st.markdown("**Change Category**")
                         current_category = tech.get('category', '❓ Uncategorized')
                         all_cats = st.session_state.storage.get_all_categories()
                         current_category_index = all_cats.index(current_category) if current_category in all_cats else len(all_cats) - 1
@@ -1153,7 +1198,8 @@ def show_tech_stack_page():
                             f"Category for {tech_name}",
                             all_cats,
                             index=current_category_index,
-                            key=f"category_selector_{tech_name}"
+                            key=f"category_selector_{tech_name}",
+                            label_visibility="collapsed"
                         )
                         
                         if st.button(f"Update Category", key=f"update_category_{tech_name}"):
@@ -1306,6 +1352,19 @@ def show_learning_tracker():
     
     with col_left:
         st.subheader("📝 Session Entry")
+        
+        # Quick add category (outside form)
+        with st.expander("➕ Add New Category", expanded=False):
+            new_cat_quick = st.text_input("New category name", key="quick_cat_learning", placeholder="e.g., Mobile Development")
+            if st.button("Add Category", key="quick_cat_btn_learning"):
+                if new_cat_quick and new_cat_quick.strip():
+                    if st.session_state.storage.add_custom_category(new_cat_quick):
+                        st.success(f"✅ Added: {new_cat_quick}")
+                        st.rerun()
+                    else:
+                        st.error("Category already exists!")
+                else:
+                    st.error("Please enter a category name.")
         
         # Get available technologies from tech stack
         tech_list = get_tech_list(st.session_state.tech_stack)
