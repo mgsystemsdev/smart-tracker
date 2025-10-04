@@ -974,12 +974,12 @@ def show_clean_dashboard():
                             st.error("You must type 'DELETE' exactly to clear all sessions.")
 
 def show_tech_stack_page():
-    """Display the Tech Stack Goals page organized by skill domains."""
+    """Display the Tech Stack Goals page organized by categories."""
     # Header with MG branding
     st.markdown("""
     <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); padding: 1.5rem; border-radius: 15px; margin-bottom: 2rem; border: 2px solid #FFD700;">
         <h1 style="color: #FFD700; margin: 0; text-align: center;">🎯 My Tech Stack</h1>
-        <p style="color: #C0C0C0; text-align: center; margin: 0.5rem 0 0 0;">Goal Tracking & Progress Overview by Skill Domain</p>
+        <p style="color: #C0C0C0; text-align: center; margin: 0.5rem 0 0 0;">Goal Tracking & Progress Overview by Category</p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -1145,12 +1145,12 @@ def show_tech_stack_page():
                                 st.info("Category unchanged")
 
 def show_planning_page():
-    """Display the complete learning roadmap with detailed hour breakdowns by subsections."""
+    """Display dynamic learning roadmap showing user's technologies by category with actual hours."""
     # Header with MG branding
     st.markdown("""
     <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); padding: 1.5rem; border-radius: 15px; margin-bottom: 2rem; border: 2px solid #FFD700;">
         <h1 style="color: #FFD700; margin: 0; text-align: center;">📋 Learning Roadmap & Planning</h1>
-        <p style="color: #C0C0C0; text-align: center; margin: 0.5rem 0 0 0;">Complete Curriculum Breakdown by Skill Domain</p>
+        <p style="color: #C0C0C0; text-align: center; margin: 0.5rem 0 0 0;">Your Technologies Grouped by Category</p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -1161,71 +1161,101 @@ def show_planning_page():
     
     st.markdown("---")
     
-    # Track grand totals
-    grand_total_min = 0
-    grand_total_max = 0
-    domain_totals = []
+    # Group technologies by category
+    tech_stack = st.session_state.tech_stack
+    learning_sessions = st.session_state.learning_sessions
     
-    # Display each domain
-    for domain_name, domain_data in PLANNING_BLUEPRINT.items():
-        st.markdown(f"## {domain_name}")
+    if not tech_stack:
+        st.info("📚 No technologies added yet. Visit the **Learning Tracker** page to add your first session!")
+        return
+    
+    # Calculate hours for each technology from sessions
+    tech_hours = {}
+    for session in learning_sessions:
+        tech_name = session.get('technology', '')
+        hours = session.get('hours', 0)
+        tech_hours[tech_name] = tech_hours.get(tech_name, 0) + hours
+    
+    # Group technologies by category
+    categories_data = {}
+    for tech in tech_stack:
+        tech_name = tech['name']
+        category = tech.get('category', '❓ Uncategorized')
         
-        domain_min_total = 0
-        domain_max_total = 0
+        if category not in categories_data:
+            categories_data[category] = []
         
-        # Display each subsection
-        for subsection in domain_data["subsections"]:
-            if subsection["name"]:
-                st.markdown(f"### {subsection['name']}")
-            
-            # Create dataframe for the table
-            table_data = []
-            subsection_min = 0
-            subsection_max = 0
-            
-            for tool in subsection["tools"]:
-                table_data.append({
-                    "Tool": tool["name"],
-                    "Hours": f"{tool['min_hours']}–{tool['max_hours']} h"
-                })
-                subsection_min += tool["min_hours"]
-                subsection_max += tool["max_hours"]
-            
-            # Display table
-            df = pd.DataFrame(table_data)
-            st.table(df)
-            
-            # Show subtotal if there are multiple tools or named subsection
-            if len(subsection["tools"]) > 1 or subsection["name"]:
-                st.markdown(f"**Subtotal → {subsection_min}–{subsection_max} h**")
-                st.markdown("")
-            
-            domain_min_total += subsection_min
-            domain_max_total += subsection_max
+        categories_data[category].append({
+            'name': tech_name,
+            'logged_hours': tech_hours.get(tech_name, 0),
+            'goal_hours': tech.get('goal_hours', 50)
+        })
+    
+    # Track grand totals
+    grand_total_logged = 0
+    grand_total_goal = 0
+    category_summaries = []
+    
+    # Display each category (in order from TECH_CATEGORIES)
+    for category in TECH_CATEGORIES:
+        if category not in categories_data:
+            continue
         
-        # Domain total
-        st.markdown(f"### ✅ {domain_name.split()[1] if len(domain_name.split()) > 1 else domain_name} Total → {domain_min_total}–{domain_max_total} h")
+        st.markdown(f"## {category}")
+        
+        techs = categories_data[category]
+        category_logged = 0
+        category_goal = 0
+        
+        # Create table data
+        table_data = []
+        for tech in sorted(techs, key=lambda x: x['name']):
+            logged = tech['logged_hours']
+            goal = tech['goal_hours']
+            completion = f"{int((logged / goal) * 100)}%" if goal > 0 else "0%"
+            
+            table_data.append({
+                "Technology": tech['name'],
+                "Logged": f"{logged:.1f} h",
+                "Goal": f"{goal} h",
+                "Progress": completion
+            })
+            
+            category_logged += logged
+            category_goal += goal
+        
+        # Display table
+        df = pd.DataFrame(table_data)
+        st.table(df)
+        
+        # Category total
+        category_completion = int((category_logged / category_goal) * 100) if category_goal > 0 else 0
+        st.markdown(f"**Category Total → {category_logged:.1f} / {category_goal} h ({category_completion}%)**")
         st.markdown("---")
         
-        domain_totals.append({
-            "Category": domain_name.split()[1] if len(domain_name.split()) > 1 else domain_name,
-            "Hours": f"{domain_min_total}–{domain_max_total} h"
+        # Track for grand total
+        category_summaries.append({
+            "Category": category,
+            "Logged": f"{category_logged:.1f} h",
+            "Goal": f"{category_goal} h",
+            "Progress": f"{category_completion}%"
         })
         
-        grand_total_min += domain_min_total
-        grand_total_max += domain_max_total
+        grand_total_logged += category_logged
+        grand_total_goal += category_goal
     
     # Grand Total Summary
     st.markdown("## 🧮 GRAND TOTAL")
     
-    grand_total_df = pd.DataFrame(domain_totals)
+    grand_total_df = pd.DataFrame(category_summaries)
     st.table(grand_total_df)
     
-    st.markdown(f"### 🎯 Overall Total: **{grand_total_min} → {grand_total_max} hours**")
+    grand_completion = int((grand_total_logged / grand_total_goal) * 100) if grand_total_goal > 0 else 0
+    st.markdown(f"### 🎯 Overall Total: **{grand_total_logged:.1f} / {grand_total_goal} hours ({grand_completion}%)**")
     
     # Progress indicator
     st.markdown("")
-    st.info("💡 This is your complete learning roadmap. Visit the **Tech Stack** page to track your actual progress on each technology!")
+    st.info("💡 This roadmap dynamically reflects your actual progress. Visit the **Tech Stack** page to manage technologies and set goals!")
 
 def show_learning_tracker():
     """Display the Smart Learning Tracker interface."""
