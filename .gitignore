@@ -30,6 +30,11 @@ ENV/
 env/
 .venv
 
+# Replit specific
+.cache/
+.pythonlibs/
+.upm/
+
 # IDE
 .vscode/
 .idea/

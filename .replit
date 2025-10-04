@@ -21,21 +21,17 @@ args = "Smart Tracker Streamlit App"
 name = "Smart Tracker Streamlit App"
 author = "agent"
 
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "pip install streamlit typer pydantic && python main.py streamlit"
-waitForPort = 5000
-
 [workflows.workflow.metadata]
 outputType = "webview"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "pip install streamlit typer pandas && python main.py streamlit"
+waitForPort = 5000
 
 [[ports]]
 localPort = 5000
 externalPort = 80
-
-[[ports]]
-localPort = 45685
-externalPort = 3000
 
 [deployment]
 deploymentTarget = "cloudrun"
