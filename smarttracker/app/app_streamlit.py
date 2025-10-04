@@ -841,6 +841,133 @@ def show_clean_dashboard():
                         else:
                             st.error("You must type 'DELETE' exactly to clear all sessions.")
 
+def show_tech_stack_page():
+    """Display the Tech Stack Goals page with aggregate stats and individual tech cards."""
+    # Header with MG branding
+    st.markdown("""
+    <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); padding: 1.5rem; border-radius: 15px; margin-bottom: 2rem; border: 2px solid #FFD700;">
+        <h1 style="color: #FFD700; margin: 0; text-align: center;">🎯 My Tech Stack</h1>
+        <p style="color: #C0C0C0; text-align: center; margin: 0.5rem 0 0 0;">Goal Tracking & Progress Overview</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Back button
+    if st.button("← Back to Home", help="Return to main page"):
+        st.session_state.current_page = "home"
+        st.rerun()
+    
+    # Initialize tech stack
+    if "tech_stack" not in st.session_state or not st.session_state.tech_stack:
+        st.info("No technologies in your stack yet. Add some from the Home page!")
+        return
+    
+    # Calculate aggregate statistics
+    total_goal_hours = sum(tech.get('goal_hours', 0) for tech in st.session_state.tech_stack)
+    
+    # Calculate total hours logged across all technologies
+    total_hours_logged = 0
+    for tech in st.session_state.tech_stack:
+        tech_name = tech['name']
+        tech_sessions = [s for s in st.session_state.learning_sessions if s.get('technology') == tech_name]
+        total_hours_logged += sum(s.get('hours', 0) for s in tech_sessions)
+    
+    # Calculate overall completion percentage
+    overall_completion = (total_hours_logged / total_goal_hours * 100) if total_goal_hours > 0 else 0
+    hours_remaining = max(0, total_goal_hours - total_hours_logged)
+    
+    # Summary Banner
+    st.markdown("""
+    <div style="background: linear-gradient(135deg, #16213e 0%, #0f3460 100%); padding: 2rem; border-radius: 15px; border: 2px solid #FFD700; margin-bottom: 2rem;">
+    """, unsafe_allow_html=True)
+    
+    st.markdown("### 📊 My Tech Stack - Total Progress")
+    
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        st.metric("Hours Done", f"{total_hours_logged:.1f}")
+    
+    with col2:
+        st.metric("Total Goal", f"{total_goal_hours:.0f} hrs")
+    
+    with col3:
+        st.metric("% Complete", f"{overall_completion:.1f}%")
+    
+    with col4:
+        st.metric("Hours Missing", f"{hours_remaining:.1f}")
+    
+    # Overall progress bar
+    st.markdown("#### Overall Progress")
+    st.progress(min(overall_completion / 100, 1.0))
+    
+    st.markdown("</div>", unsafe_allow_html=True)
+    
+    st.markdown("---")
+    
+    # Individual Technology Cards
+    st.markdown("### 🔧 Individual Technology Goals")
+    
+    # Create cards in a grid layout
+    for tech in st.session_state.tech_stack:
+        tech_name = tech['name']
+        goal_hours = tech.get('goal_hours', 0)
+        category = tech.get('category', 'Unknown')
+        
+        # Calculate hours logged for this technology
+        tech_sessions = [s for s in st.session_state.learning_sessions if s.get('technology') == tech_name]
+        hours_logged = sum(s.get('hours', 0) for s in tech_sessions)
+        session_count = len(tech_sessions)
+        
+        # Calculate progress
+        progress_pct = (hours_logged / goal_hours * 100) if goal_hours > 0 else 0
+        hours_left = max(0, goal_hours - hours_logged)
+        
+        # Determine status color
+        if progress_pct >= 100:
+            status_icon = "✅"
+            status_color = "#00FF00"
+        elif progress_pct >= 75:
+            status_icon = "🟢"
+            status_color = "#90EE90"
+        elif progress_pct >= 50:
+            status_icon = "🟡"
+            status_color = "#FFD700"
+        elif progress_pct >= 25:
+            status_icon = "🟠"
+            status_color = "#FFA500"
+        else:
+            status_icon = "🔴"
+            status_color = "#FF6B6B"
+        
+        # Card display
+        with st.container():
+            st.markdown(f"""
+            <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); padding: 1.5rem; border-radius: 12px; border: 2px solid {status_color}; margin-bottom: 1rem; box-shadow: 0 4px 15px rgba(255, 215, 0, 0.2);">
+                <h3 style="color: #FFD700; margin: 0 0 0.5rem 0;">{status_icon} {tech_name}</h3>
+                <p style="color: #C0C0C0; margin: 0 0 1rem 0; font-size: 0.9rem;"><em>{category}</em></p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            col_a, col_b, col_c, col_d = st.columns(4)
+            
+            with col_a:
+                st.metric("Hours Done", f"{hours_logged:.1f}")
+            
+            with col_b:
+                st.metric("Goal", f"{goal_hours:.0f} hrs")
+            
+            with col_c:
+                st.metric("Progress", f"{progress_pct:.1f}%")
+            
+            with col_d:
+                st.metric("Remaining", f"{hours_left:.1f} hrs")
+            
+            # Progress bar
+            st.progress(min(progress_pct / 100, 1.0))
+            st.caption(f"📚 {session_count} sessions logged")
+            
+            st.markdown("---")
+
 def show_learning_tracker():
     """Display the Smart Learning Tracker interface."""
     # Header with MG branding
