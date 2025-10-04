@@ -169,3 +169,97 @@ class JSONStorage:
         custom_categories = self.load_custom_categories()
         custom_categories.append(category_name)
         return self.save_custom_categories(custom_categories)
+    
+    def rename_custom_category(self, old_name: str, new_name: str) -> bool:
+        """Rename a custom category and update all technologies using it."""
+        if not old_name or not new_name or not old_name.strip() or not new_name.strip():
+            return False
+        
+        old_name = old_name.strip()
+        new_name = new_name.strip()
+        
+        if old_name in TECH_CATEGORIES:
+            return False
+        
+        custom_categories = self.load_custom_categories()
+        if old_name not in custom_categories:
+            return False
+        
+        if new_name in self.get_all_categories():
+            return False
+        
+        custom_categories = [new_name if cat == old_name else cat for cat in custom_categories]
+        self.save_custom_categories(custom_categories)
+        
+        tech_stack = self.load_tech_stack()
+        updated = False
+        for tech in tech_stack:
+            if tech.get('category') == old_name:
+                tech['category'] = new_name
+                updated = True
+        
+        if updated:
+            self.save_tech_stack(tech_stack)
+        
+        return True
+    
+    def delete_custom_category(self, category_name: str) -> bool:
+        """Delete a custom category and reassign technologies to Uncategorized."""
+        if not category_name or not category_name.strip():
+            return False
+        
+        category_name = category_name.strip()
+        
+        if category_name in TECH_CATEGORIES:
+            return False
+        
+        custom_categories = self.load_custom_categories()
+        if category_name not in custom_categories:
+            return False
+        
+        custom_categories = [cat for cat in custom_categories if cat != category_name]
+        self.save_custom_categories(custom_categories)
+        
+        tech_stack = self.load_tech_stack()
+        updated = False
+        for tech in tech_stack:
+            if tech.get('category') == category_name:
+                tech['category'] = "❓ Uncategorized"
+                updated = True
+        
+        if updated:
+            self.save_tech_stack(tech_stack)
+        
+        return True
+    
+    def merge_categories(self, source_category: str, target_category: str) -> bool:
+        """Merge source category into target category, updating all technologies."""
+        if not source_category or not target_category:
+            return False
+        
+        source_category = source_category.strip()
+        target_category = target_category.strip()
+        
+        all_categories = self.get_all_categories()
+        if source_category not in all_categories or target_category not in all_categories:
+            return False
+        
+        if source_category == target_category:
+            return False
+        
+        tech_stack = self.load_tech_stack()
+        updated = False
+        for tech in tech_stack:
+            if tech.get('category') == source_category:
+                tech['category'] = target_category
+                updated = True
+        
+        if updated:
+            self.save_tech_stack(tech_stack)
+        
+        if source_category not in TECH_CATEGORIES:
+            custom_categories = self.load_custom_categories()
+            custom_categories = [cat for cat in custom_categories if cat != source_category]
+            self.save_custom_categories(custom_categories)
+        
+        return True
