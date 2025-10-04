@@ -588,6 +588,108 @@ def show_home_page():
                         st.success(f"Deleted {tech['name']} from tech stack!")
                         st.rerun()
             
+            # Category Manager
+            st.markdown("---")
+            st.markdown("#### 🏷️ Manage Categories")
+            
+            custom_categories = st.session_state.storage.load_custom_categories()
+            
+            if custom_categories:
+                st.markdown("**Your Custom Categories:**")
+                
+                for cat in custom_categories:
+                    col_cat_name, col_rename, col_delete = st.columns([3, 1, 1])
+                    
+                    with col_cat_name:
+                        tech_count = sum(1 for tech in st.session_state.tech_stack if tech.get('category') == cat)
+                        st.write(f"**{cat}** - {tech_count} technologies")
+                    
+                    with col_rename:
+                        if st.button("✏️", key=f"rename_cat_{cat}", help=f"Rename {cat}"):
+                            st.session_state.renaming_category = cat
+                            st.rerun()
+                    
+                    with col_delete:
+                        if st.button("🗑️", key=f"delete_cat_{cat}", help=f"Delete {cat}"):
+                            st.session_state.deleting_category = cat
+                            st.rerun()
+                
+                # Rename category dialog
+                if st.session_state.get("renaming_category"):
+                    st.markdown("---")
+                    st.markdown(f"**Rename Category: {st.session_state.renaming_category}**")
+                    new_cat_name = st.text_input("New category name", key="rename_cat_input")
+                    
+                    col_save_rename, col_cancel_rename = st.columns(2)
+                    with col_save_rename:
+                        if st.button("💾 Save", key="save_rename_cat"):
+                            if new_cat_name and new_cat_name.strip():
+                                if st.session_state.storage.rename_custom_category(st.session_state.renaming_category, new_cat_name):
+                                    st.success(f"✅ Renamed '{st.session_state.renaming_category}' to '{new_cat_name}'")
+                                    st.session_state.tech_stack = st.session_state.storage.load_tech_stack()
+                                    st.session_state.renaming_category = None
+                                    st.rerun()
+                                else:
+                                    st.error("Category name already exists or is invalid!")
+                            else:
+                                st.error("Please enter a valid name.")
+                    
+                    with col_cancel_rename:
+                        if st.button("❌ Cancel", key="cancel_rename_cat"):
+                            st.session_state.renaming_category = None
+                            st.rerun()
+                
+                # Delete category confirmation
+                if st.session_state.get("deleting_category"):
+                    st.markdown("---")
+                    st.warning(f"⚠️ Delete category '{st.session_state.deleting_category}'?")
+                    tech_count = sum(1 for tech in st.session_state.tech_stack if tech.get('category') == st.session_state.deleting_category)
+                    if tech_count > 0:
+                        st.info(f"📝 {tech_count} technologies will be moved to '❓ Uncategorized'")
+                    
+                    col_confirm_delete, col_cancel_delete = st.columns(2)
+                    with col_confirm_delete:
+                        if st.button("🗑️ Delete", key="confirm_delete_cat", type="primary"):
+                            if st.session_state.storage.delete_custom_category(st.session_state.deleting_category):
+                                st.success(f"✅ Deleted category '{st.session_state.deleting_category}'")
+                                st.session_state.tech_stack = st.session_state.storage.load_tech_stack()
+                                st.session_state.deleting_category = None
+                                st.rerun()
+                            else:
+                                st.error("Failed to delete category!")
+                    
+                    with col_cancel_delete:
+                        if st.button("❌ Cancel", key="cancel_delete_cat"):
+                            st.session_state.deleting_category = None
+                            st.rerun()
+                
+                # Merge categories
+                st.markdown("---")
+                st.markdown("**Merge Categories:**")
+                st.caption("Combine two categories into one")
+                
+                col_merge_from, col_merge_to = st.columns(2)
+                all_cats = st.session_state.storage.get_all_categories()
+                
+                with col_merge_from:
+                    merge_source = st.selectbox("From category", all_cats, key="merge_source_cat")
+                
+                with col_merge_to:
+                    merge_target = st.selectbox("To category", all_cats, key="merge_target_cat")
+                
+                if st.button("🔀 Merge Categories", key="merge_cats_btn"):
+                    if merge_source != merge_target:
+                        if st.session_state.storage.merge_categories(merge_source, merge_target):
+                            st.success(f"✅ Merged '{merge_source}' into '{merge_target}'")
+                            st.session_state.tech_stack = st.session_state.storage.load_tech_stack()
+                            st.rerun()
+                        else:
+                            st.error("Failed to merge categories!")
+                    else:
+                        st.error("Please select different categories.")
+            else:
+                st.info("No custom categories yet. Add one above to get started!")
+            
             st.markdown("</div>", unsafe_allow_html=True)
     
     # Footer with personal branding
