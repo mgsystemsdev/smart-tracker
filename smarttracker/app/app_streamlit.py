@@ -348,6 +348,83 @@ def show_clean_dashboard():
     if "learning_sessions" not in st.session_state:
         st.session_state.learning_sessions = []
     
+    # Edit Session Dialog
+    if st.session_state.get("editing_session") is not None:
+        edit_index = st.session_state.editing_session
+        
+        if 0 <= edit_index < len(st.session_state.learning_sessions):
+            session = st.session_state.learning_sessions[edit_index]
+            
+            st.markdown("""
+            <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); padding: 2rem; border-radius: 15px; border: 2px solid #FFD700; margin: 1rem 0;">
+            """, unsafe_allow_html=True)
+            
+            st.markdown("### ✏️ Edit Learning Session")
+            
+            with st.form(f"edit_form_{edit_index}"):
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    edit_date = st.date_input("Date", value=pd.to_datetime(session['date']).date())
+                    edit_technology = st.selectbox("Technology", 
+                        ["Python", "JavaScript", "React", "Node.js", "Java", "C#", "SQL", "Docker", "AWS", "Other"],
+                        index=["Python", "JavaScript", "React", "Node.js", "Java", "C#", "SQL", "Docker", "AWS", "Other"].index(session.get('technology', 'Python')) if session.get('technology') in ["Python", "JavaScript", "React", "Node.js", "Java", "C#", "SQL", "Docker", "AWS", "Other"] else 0)
+                    edit_topic = st.text_input("Topic/Subject", value=session.get('topic', ''))
+                    edit_type = st.selectbox("Session Type", ["Coding", "Reading", "Tutorial", "Practice", "Project", "Course"],
+                        index=["Coding", "Reading", "Tutorial", "Practice", "Project", "Course"].index(session.get('type', 'Coding')) if session.get('type') in ["Coding", "Reading", "Tutorial", "Practice", "Project", "Course"] else 0)
+                
+                with col2:
+                    edit_difficulty = st.selectbox("Difficulty", ["Beginner", "Intermediate", "Advanced", "Expert"],
+                        index=["Beginner", "Intermediate", "Advanced", "Expert"].index(session.get('difficulty', 'Beginner')) if session.get('difficulty') in ["Beginner", "Intermediate", "Advanced", "Expert"] else 0)
+                    edit_hours = st.number_input("Hours Spent", min_value=0.0, value=float(session.get('hours', 1.0)), step=0.25)
+                    edit_progress = st.slider("Progress (%)", 0, 100, int(session.get('progress', 50)))
+                    edit_status = st.selectbox("Status", ["In Progress", "Completed", "Paused", "Planned"],
+                        index=["In Progress", "Completed", "Paused", "Planned"].index(session.get('status', 'In Progress')) if session.get('status') in ["In Progress", "Completed", "Paused", "Planned"] else 0)
+                
+                edit_tags = st.text_input("Tags", value=session.get('tags', ''))
+                edit_notes = st.text_area("Notes", value=session.get('notes', ''))
+                
+                col_save, col_cancel = st.columns(2)
+                
+                with col_save:
+                    submitted = st.form_submit_button("💾 Save Changes", type="primary")
+                
+                with col_cancel:
+                    cancel = st.form_submit_button("❌ Cancel")
+                
+                if submitted:
+                    # Update the session
+                    st.session_state.learning_sessions[edit_index] = {
+                        "date": str(edit_date),
+                        "technology": edit_technology,
+                        "topic": edit_topic,
+                        "work_item": session.get('work_item', edit_topic),
+                        "skill": session.get('skill', edit_topic),
+                        "type": edit_type,
+                        "category_type": session.get('category_type', ''),
+                        "category_name": session.get('category_name', ''),
+                        "category_source": session.get('category_source', ''),
+                        "difficulty": edit_difficulty,
+                        "status": edit_status,
+                        "hours": edit_hours,
+                        "target_hours": session.get('target_hours', 0),
+                        "progress": edit_progress,
+                        "tags": edit_tags,
+                        "notes": edit_notes
+                    }
+                    # Save to JSON
+                    st.session_state.storage.save_sessions(st.session_state.learning_sessions)
+                    st.session_state.editing_session = None
+                    st.success("✅ Session updated successfully!")
+                    st.rerun()
+                
+                if cancel:
+                    st.session_state.editing_session = None
+                    st.rerun()
+            
+            st.markdown("</div>", unsafe_allow_html=True)
+            st.markdown("---")
+    
     # Dashboard metrics
     st.markdown("### 📊 Learning Metrics")
     col1, col2, col3, col4 = st.columns(4)
@@ -448,6 +525,9 @@ def show_clean_dashboard():
             if filtered_sessions:
                 # Display filtered and sorted sessions
                 for i, session in enumerate(filtered_sessions):
+                    # Get the actual index in the full sessions list
+                    session_index = st.session_state.learning_sessions.index(session)
+                    
                     # Color-code status
                     status_color = {
                         'Completed': '🟢',
@@ -476,6 +556,24 @@ def show_clean_dashboard():
                         # Progress bar
                         progress_val = session['progress'] / 100
                         st.progress(progress_val, text=f"Progress: {session['progress']}%")
+                        
+                        # Action buttons
+                        st.markdown("---")
+                        col_edit, col_delete, col_spacer = st.columns([1, 1, 2])
+                        
+                        with col_edit:
+                            if st.button("✏️ Edit", key=f"edit_{session_index}", type="secondary"):
+                                st.session_state.editing_session = session_index
+                                st.rerun()
+                        
+                        with col_delete:
+                            if st.button("🗑️ Delete", key=f"delete_{session_index}", type="secondary"):
+                                # Delete the session
+                                st.session_state.learning_sessions.pop(session_index)
+                                # Save to JSON
+                                st.session_state.storage.save_sessions(st.session_state.learning_sessions)
+                                st.success("Session deleted!")
+                                st.rerun()
             else:
                 st.info("No sessions match your current filters. Try adjusting the filters above.")
         else:
@@ -485,9 +583,27 @@ def show_clean_dashboard():
     with col_right:
         st.subheader("🎯 Quick Actions")
         
+        # Export to CSV
+        if st.session_state.learning_sessions:
+            st.markdown("#### 📥 Export Data")
+            
+            # Create CSV from sessions
+            df_export = pd.DataFrame(st.session_state.learning_sessions)
+            csv = df_export.to_csv(index=False)
+            
+            st.download_button(
+                label="📄 Download CSV",
+                data=csv,
+                file_name="learning_sessions.csv",
+                mime="text/csv",
+                help="Download all your learning sessions as CSV"
+            )
+            
+            st.markdown("---")
+        
         # Technology breakdown
         if st.session_state.learning_sessions:
-            st.markdown("#### Technology Focus")
+            st.markdown("#### 📊 Technology Focus")
             tech_count = {}
             for session in st.session_state.learning_sessions:
                 tech = session.get('technology', 'Unknown')

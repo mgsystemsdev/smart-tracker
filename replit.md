@@ -55,8 +55,15 @@ The application follows a layered architecture pattern with clear separation of 
 ### Development Tools
 - **pytest**: Testing framework (structure prepared in `tests/` directory)
 
-### Data Persistence
+### Data Persistence & Management
 - **JSON Storage**: Learning sessions and tech stack configuration persist across sessions
 - **File-based Storage**: Data saved to `data/` directory (excluded from git)
 - **Automatic Backup**: Backup functionality available through storage module
 - **Session Recovery**: All data automatically loaded on app startup
+
+### CRUD Operations
+- **Create**: Add new learning sessions via Smart Learning Tracker
+- **Read**: View sessions with filtering and sorting in Clean Dashboard
+- **Update**: Edit individual sessions with full-featured edit dialog
+- **Delete**: Remove individual sessions or clear all at once
+- **Export**: Download all sessions as CSV for external analysis
