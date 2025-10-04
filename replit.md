@@ -10,6 +10,14 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (October 4, 2025)
 
+### Categorized Tech Stack by Skill Domains
+- **6 Skill Domains**: Technologies organized into Core Full-Stack Development, Data Science & ML, Excel Automation, Core Automation, Reliability & Security, Supporting Skills, plus Uncategorized
+- **Domain-Based Tech Stack Page**: Displays technologies grouped by domain with collapsible sections showing domain subtotals (hours logged/goal hours/completion %)
+- **Domain Selection**: When adding new technologies, users select which skill domain it belongs to via dropdown
+- **Domain Management**: Each tech card has settings expander allowing users to reassign technologies to different domains
+- **Auto-Migration**: Existing technologies automatically assigned "Uncategorized" domain on first load, can be reassigned via management UI
+- **Data Model Update**: Tech stack JSON now includes "domain" and "subsection" fields for future planning features
+
 ### Data Integrity & Logging Implementation
 - **Input Validation**: Hours must be 0-12, no future dates, technology cannot be empty
 - **Activity Logging**: All CRUD operations logged to /logs/activity.log with timestamps
