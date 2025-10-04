@@ -10,7 +10,7 @@ from datetime import date, datetime
 import logging
 import os
 from smarttracker import __version__
-from smarttracker.domain.storage import JSONStorage
+from smarttracker.domain.storage import JSONStorage, SKILL_DOMAINS
 
 # Setup logging
 os.makedirs("logs", exist_ok=True)
@@ -842,12 +842,12 @@ def show_clean_dashboard():
                             st.error("You must type 'DELETE' exactly to clear all sessions.")
 
 def show_tech_stack_page():
-    """Display the Tech Stack Goals page with aggregate stats and individual tech cards."""
+    """Display the Tech Stack Goals page organized by skill domains."""
     # Header with MG branding
     st.markdown("""
     <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); padding: 1.5rem; border-radius: 15px; margin-bottom: 2rem; border: 2px solid #FFD700;">
         <h1 style="color: #FFD700; margin: 0; text-align: center;">🎯 My Tech Stack</h1>
-        <p style="color: #C0C0C0; text-align: center; margin: 0.5rem 0 0 0;">Goal Tracking & Progress Overview</p>
+        <p style="color: #C0C0C0; text-align: center; margin: 0.5rem 0 0 0;">Goal Tracking & Progress Overview by Skill Domain</p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -858,7 +858,7 @@ def show_tech_stack_page():
     
     # Initialize tech stack
     if "tech_stack" not in st.session_state or not st.session_state.tech_stack:
-        st.info("No technologies in your stack yet. Add some from the Home page!")
+        st.info("No technologies in your stack yet. Add some from the Learning Tracker!")
         return
     
     # Calculate aggregate statistics
@@ -904,69 +904,91 @@ def show_tech_stack_page():
     
     st.markdown("---")
     
-    # Individual Technology Cards
-    st.markdown("### 🔧 Individual Technology Goals")
-    
-    # Create cards in a grid layout
+    # Group technologies by domain
+    techs_by_domain = {}
     for tech in st.session_state.tech_stack:
-        tech_name = tech['name']
-        goal_hours = tech.get('goal_hours', 0)
-        category = tech.get('category', 'Unknown')
+        domain = tech.get('domain', '❓ Uncategorized')
+        if domain not in techs_by_domain:
+            techs_by_domain[domain] = []
+        techs_by_domain[domain].append(tech)
+    
+    # Display technologies grouped by domain
+    for domain in SKILL_DOMAINS:
+        if domain not in techs_by_domain:
+            continue
         
-        # Calculate hours logged for this technology
-        tech_sessions = [s for s in st.session_state.learning_sessions if s.get('technology') == tech_name]
-        hours_logged = sum(s.get('hours', 0) for s in tech_sessions)
-        session_count = len(tech_sessions)
+        domain_techs = techs_by_domain[domain]
         
-        # Calculate progress
-        progress_pct = (hours_logged / goal_hours * 100) if goal_hours > 0 else 0
-        hours_left = max(0, goal_hours - hours_logged)
+        # Calculate domain subtotals
+        domain_goal_hours = sum(tech.get('goal_hours', 0) for tech in domain_techs)
+        domain_hours_logged = 0
+        for tech in domain_techs:
+            tech_name = tech['name']
+            tech_sessions = [s for s in st.session_state.learning_sessions if s.get('technology') == tech_name]
+            domain_hours_logged += sum(s.get('hours', 0) for s in tech_sessions)
         
-        # Determine status color
-        if progress_pct >= 100:
-            status_icon = "✅"
-            status_color = "#00FF00"
-        elif progress_pct >= 75:
-            status_icon = "🟢"
-            status_color = "#90EE90"
-        elif progress_pct >= 50:
-            status_icon = "🟡"
-            status_color = "#FFD700"
-        elif progress_pct >= 25:
-            status_icon = "🟠"
-            status_color = "#FFA500"
-        else:
-            status_icon = "🔴"
-            status_color = "#FF6B6B"
+        domain_completion = (domain_hours_logged / domain_goal_hours * 100) if domain_goal_hours > 0 else 0
         
-        # Card display
-        with st.container():
-            st.markdown(f"""
-            <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); padding: 1.5rem; border-radius: 12px; border: 2px solid {status_color}; margin-bottom: 1rem; box-shadow: 0 4px 15px rgba(255, 215, 0, 0.2);">
-                <h3 style="color: #FFD700; margin: 0 0 0.5rem 0;">{status_icon} {tech_name}</h3>
-                <p style="color: #C0C0C0; margin: 0 0 1rem 0; font-size: 0.9rem;"><em>{category}</em></p>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            col_a, col_b, col_c, col_d = st.columns(4)
-            
-            with col_a:
-                st.metric("Hours Done", f"{hours_logged:.1f}")
-            
-            with col_b:
-                st.metric("Goal", f"{goal_hours:.0f} hrs")
-            
-            with col_c:
-                st.metric("Progress", f"{progress_pct:.1f}%")
-            
-            with col_d:
-                st.metric("Remaining", f"{hours_left:.1f} hrs")
-            
-            # Progress bar
-            st.progress(min(progress_pct / 100, 1.0))
-            st.caption(f"📚 {session_count} sessions logged")
-            
-            st.markdown("---")
+        # Domain header with subtotals
+        with st.expander(f"**{domain}** - {domain_hours_logged:.1f}/{domain_goal_hours:.0f} hrs ({domain_completion:.1f}%)", expanded=True):
+            # Individual Technology Cards
+            for tech in domain_techs:
+                tech_name = tech['name']
+                goal_hours = tech.get('goal_hours', 0)
+                category = tech.get('category', 'Unknown')
+                
+                # Calculate hours logged for this technology
+                tech_sessions = [s for s in st.session_state.learning_sessions if s.get('technology') == tech_name]
+                hours_logged = sum(s.get('hours', 0) for s in tech_sessions)
+                session_count = len(tech_sessions)
+                
+                # Calculate progress
+                progress_pct = (hours_logged / goal_hours * 100) if goal_hours > 0 else 0
+                hours_left = max(0, goal_hours - hours_logged)
+                
+                # Determine status color
+                if progress_pct >= 100:
+                    status_icon = "✅"
+                    status_color = "#00FF00"
+                elif progress_pct >= 75:
+                    status_icon = "🟢"
+                    status_color = "#90EE90"
+                elif progress_pct >= 50:
+                    status_icon = "🟡"
+                    status_color = "#FFD700"
+                elif progress_pct >= 25:
+                    status_icon = "🟠"
+                    status_color = "#FFA500"
+                else:
+                    status_icon = "🔴"
+                    status_color = "#FF6B6B"
+                
+                # Card display
+                with st.container():
+                    st.markdown(f"""
+                    <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); padding: 1.5rem; border-radius: 12px; border: 2px solid {status_color}; margin-bottom: 1rem; box-shadow: 0 4px 15px rgba(255, 215, 0, 0.2);">
+                        <h3 style="color: #FFD700; margin: 0 0 0.5rem 0;">{status_icon} {tech_name}</h3>
+                        <p style="color: #C0C0C0; margin: 0 0 1rem 0; font-size: 0.9rem;"><em>{category}</em></p>
+                    </div>
+                    """, unsafe_allow_html=True)
+                    
+                    col_a, col_b, col_c, col_d = st.columns(4)
+                    
+                    with col_a:
+                        st.metric("Hours Done", f"{hours_logged:.1f}")
+                    
+                    with col_b:
+                        st.metric("Goal", f"{goal_hours:.0f} hrs")
+                    
+                    with col_c:
+                        st.metric("Progress", f"{progress_pct:.1f}%")
+                    
+                    with col_d:
+                        st.metric("Remaining", f"{hours_left:.1f} hrs")
+                    
+                    # Progress bar
+                    st.progress(min(progress_pct / 100, 1.0))
+                    st.caption(f"📚 {session_count} sessions logged")
 
 def show_learning_tracker():
     """Display the Smart Learning Tracker interface."""
