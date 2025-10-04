@@ -1209,6 +1209,10 @@ def main():
             st.session_state.current_page = "learning_tracker"
             st.rerun()
         
+        if st.button("🎯 Tech Stack", width="stretch"):
+            st.session_state.current_page = "tech_stack"
+            st.rerun()
+        
         st.markdown("---")
         
         # Professional info section
@@ -1236,6 +1240,8 @@ def main():
         show_clean_dashboard()
     elif st.session_state.current_page == "learning_tracker":
         show_learning_tracker()
+    elif st.session_state.current_page == "tech_stack":
+        show_tech_stack_page()
 
 if __name__ == "__main__":
     main()
