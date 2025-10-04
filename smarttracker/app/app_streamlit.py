@@ -211,16 +211,30 @@ def show_home_page():
     tech_stack = st.session_state.tech_stack
     rows = [tech_stack[i:i+4] for i in range(0, len(tech_stack), 4)]
     
-    for row in rows:
+    for row_idx, row in enumerate(rows):
         cols = st.columns(4)
-        for i, tech in enumerate(row):
-            with cols[i]:
+        for col_idx, tech in enumerate(row):
+            tech_index = row_idx * 4 + col_idx
+            with cols[col_idx]:
                 st.markdown(f"""
                 <div style="text-align: center; padding: 1rem; background: rgba(0, 206, 209, 0.1); border-radius: 8px; margin: 0.25rem;">
                     <div style="color: #00CED1; font-size: 1.2rem; font-weight: bold; margin-bottom: 0.5rem;">{tech['name']}</div>
                     <div style="color: #C0C0C0; font-size: 0.8rem;">{tech['category']}</div>
                 </div>
                 """, unsafe_allow_html=True)
+                
+                # Edit and Delete buttons
+                btn_col1, btn_col2 = st.columns(2)
+                with btn_col1:
+                    if st.button("✏️", key=f"edit_tech_{tech_index}", help=f"Edit {tech['name']}"):
+                        st.session_state.editing_tech = tech_index
+                        st.rerun()
+                with btn_col2:
+                    if st.button("🗑️", key=f"delete_tech_{tech_index}", help=f"Delete {tech['name']}"):
+                        st.session_state.tech_stack.pop(tech_index)
+                        st.session_state.storage.save_tech_stack(st.session_state.tech_stack)
+                        st.success(f"Deleted {tech['name']} from tech stack!")
+                        st.rerun()
         
         # Fill empty columns if row is not complete
         for i in range(len(row), 4):
@@ -229,6 +243,63 @@ def show_home_page():
     
     # Close the container
     st.markdown("</div>", unsafe_allow_html=True)
+    
+    # Edit Technology Dialog
+    if st.session_state.get("editing_tech") is not None:
+        edit_tech_index = st.session_state.editing_tech
+        
+        if 0 <= edit_tech_index < len(st.session_state.tech_stack):
+            tech = st.session_state.tech_stack[edit_tech_index]
+            
+            st.markdown("""
+            <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); padding: 2rem; border-radius: 15px; border: 2px solid #FFD700; margin: 1rem 0;">
+            """, unsafe_allow_html=True)
+            
+            st.markdown("### ✏️ Edit Technology")
+            
+            with st.form(f"edit_tech_form_{edit_tech_index}"):
+                col1, col2, col3 = st.columns(3)
+                
+                with col1:
+                    edit_tech_name = st.text_input("Technology Name", value=tech.get('name', ''))
+                
+                with col2:
+                    categories = ["Language", "Framework", "Library", "Tool", "Database", "Platform", "Concept"]
+                    current_category = tech.get('category', 'Language')
+                    category_index = categories.index(current_category) if current_category in categories else 0
+                    edit_tech_category = st.selectbox("Category", categories, index=category_index)
+                
+                with col3:
+                    edit_goal_hours = st.number_input("Goal Hours", min_value=1, step=1, value=int(tech.get('goal_hours', 100)))
+                
+                col_save, col_cancel = st.columns(2)
+                
+                with col_save:
+                    submitted = st.form_submit_button("💾 Save Changes", type="primary")
+                
+                with col_cancel:
+                    cancel = st.form_submit_button("❌ Cancel")
+                
+                if submitted:
+                    # Update the technology
+                    st.session_state.tech_stack[edit_tech_index] = {
+                        "name": edit_tech_name,
+                        "category": edit_tech_category,
+                        "goal_hours": edit_goal_hours,
+                        "date_added": tech.get('date_added', str(date.today()))
+                    }
+                    # Save to JSON
+                    st.session_state.storage.save_tech_stack(st.session_state.tech_stack)
+                    st.session_state.editing_tech = None
+                    st.success("✅ Technology updated successfully!")
+                    st.rerun()
+                
+                if cancel:
+                    st.session_state.editing_tech = None
+                    st.rerun()
+            
+            st.markdown("</div>", unsafe_allow_html=True)
+            st.markdown("---")
     
     # Tech stack update dialog
     if st.session_state.get("show_tech_dialog", False):
@@ -257,17 +328,21 @@ def show_home_page():
             with col_add:
                 if st.button("➕ Add Technology", type="primary"):
                     if new_tech_name and new_tech_category:
-                        from datetime import date
-                        st.session_state.tech_stack.append({
-                            "name": new_tech_name,
-                            "category": new_tech_category,
-                            "goal_hours": new_goal_hours,
-                            "date_added": str(date.today())
-                        })
-                        # Save to JSON file
-                        st.session_state.storage.save_tech_stack(st.session_state.tech_stack)
-                        st.success(f"Added {new_tech_name} to your tech stack!")
-                        st.rerun()
+                        # Check for duplicate (case-insensitive)
+                        if any(existing['name'].lower() == new_tech_name.lower() for existing in st.session_state.tech_stack):
+                            st.error(f"Technology '{new_tech_name}' already exists in your tech stack!")
+                        else:
+                            from datetime import date
+                            st.session_state.tech_stack.append({
+                                "name": new_tech_name,
+                                "category": new_tech_category,
+                                "goal_hours": new_goal_hours,
+                                "date_added": str(date.today())
+                            })
+                            # Save to JSON file
+                            st.session_state.storage.save_tech_stack(st.session_state.tech_stack)
+                            st.success(f"Added {new_tech_name} to your tech stack!")
+                            st.rerun()
                     else:
                         st.error("Please enter both technology name and category.")
             
@@ -687,13 +762,22 @@ def show_clean_dashboard():
                 df_display = df[available_columns]
                 st.dataframe(df_display, height=300)
                 
-                # Clear all sessions button
-                if st.button("🗑️ Clear All Sessions", help="This will delete all your learning sessions"):
-                    st.session_state.learning_sessions = []
-                    # Save empty list to JSON file
-                    st.session_state.storage.save_sessions([])
-                    st.success("All sessions cleared!")
-                    st.rerun()
+                # Clear all sessions button with protection
+                with st.expander("⚠️ Danger Zone", expanded=False):
+                    st.warning("⚠️ **WARNING:** Clearing all sessions is permanent and cannot be undone!")
+                    st.markdown("To confirm deletion, type **DELETE** (case-sensitive) in the box below:")
+                    
+                    delete_confirmation = st.text_input("Type DELETE to confirm:", key="delete_confirm")
+                    
+                    if st.button("🗑️ Clear All Sessions", type="secondary"):
+                        if delete_confirmation == "DELETE":
+                            st.session_state.learning_sessions = []
+                            # Save empty list to JSON file
+                            st.session_state.storage.save_sessions([])
+                            st.success("All sessions cleared!")
+                            st.rerun()
+                        else:
+                            st.error("You must type 'DELETE' exactly to clear all sessions.")
 
 def show_learning_tracker():
     """Display the Smart Learning Tracker interface."""
