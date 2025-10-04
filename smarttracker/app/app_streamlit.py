@@ -1065,7 +1065,8 @@ def show_tech_stack_page():
         techs_by_category[category].append(tech)
     
     # Display technologies grouped by category
-    for category in TECH_CATEGORIES:
+    all_categories = st.session_state.storage.get_all_categories()
+    for category in all_categories:
         if category not in techs_by_category:
             continue
         
@@ -1145,11 +1146,12 @@ def show_tech_stack_page():
                     # Category management
                     with st.expander("⚙️ Manage Tech Settings", expanded=False):
                         current_category = tech.get('category', '❓ Uncategorized')
-                        current_category_index = TECH_CATEGORIES.index(current_category) if current_category in TECH_CATEGORIES else len(TECH_CATEGORIES) - 1
+                        all_cats = st.session_state.storage.get_all_categories()
+                        current_category_index = all_cats.index(current_category) if current_category in all_cats else len(all_cats) - 1
                         
                         new_category = st.selectbox(
                             f"Category for {tech_name}",
-                            TECH_CATEGORIES,
+                            all_cats,
                             index=current_category_index,
                             key=f"category_selector_{tech_name}"
                         )
@@ -1216,8 +1218,9 @@ def show_planning_page():
     grand_total_goal = 0
     category_summaries = []
     
-    # Display each category (in order from TECH_CATEGORIES)
-    for category in TECH_CATEGORIES:
+    # Display each category (in order from all categories)
+    all_categories = st.session_state.storage.get_all_categories()
+    for category in all_categories:
         if category not in categories_data:
             continue
         
@@ -1315,7 +1318,8 @@ def show_learning_tracker():
             st.caption(f"💡 Suggestions: {', '.join(tech_list[:6])}")
             
             st.markdown("**Category** _(for new technologies)_")
-            tech_category = st.selectbox("Select category for new techs", TECH_CATEGORIES[:-1], label_visibility="collapsed", help="Select which category this technology belongs to if it's new")
+            all_cats = st.session_state.storage.get_all_categories()
+            tech_category = st.selectbox("Select category for new techs", all_cats[:-1], label_visibility="collapsed", help="Select which category this technology belongs to if it's new")
             
             work_item = st.text_input("Work Item", placeholder="Enter project or resource...")
             skill = st.text_input("Skill/Topic", placeholder="Enter specific skill or topic...")
