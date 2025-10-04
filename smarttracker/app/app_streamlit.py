@@ -174,32 +174,6 @@ def show_home_page():
         </div>
         """, unsafe_allow_html=True)
     
-    # Demo section with professional styling
-    st.markdown("---")
-    st.markdown("""
-    <div style="text-align: center; margin: 2rem 0;">
-        <h3 style="color: #FFD700; margin-bottom: 1rem;">🎮 My Tracking Interfaces</h3>
-        <p style="color: #C0C0C0;">Choose my preferred tracking mode</p>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    col_demo1, col_demo2, col_demo3 = st.columns(3)
-    
-    with col_demo1:
-        if st.button("🎉 System Demo", help="Experience the MG System capabilities"):
-            st.balloons()
-            st.success("🚀 MG System Dev - Tracking Excellence Activated!")
-    
-    with col_demo2:
-        if st.button("📚 Clean Dashboard", help="Professional learning session tracking interface"):
-            st.session_state.current_page = "clean_dashboard"
-            st.rerun()
-    
-    with col_demo3:
-        if st.button("🎓 Learning Tracker", help="Advanced desktop-style tracking application"):
-            st.session_state.current_page = "learning_tracker"
-            st.rerun()
-    
     # Professional stats section with tech stack management
     st.markdown("---")
     
@@ -912,7 +886,7 @@ def main():
             st.session_state.current_page = "home"
             st.rerun()
         
-        if st.button("📚 Clean Dashboard", width="stretch"):
+        if st.button("📚 Dashboard", width="stretch"):
             st.session_state.current_page = "clean_dashboard"
             st.rerun()
             
