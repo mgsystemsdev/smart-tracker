@@ -10,21 +10,22 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (October 4, 2025)
 
-### Categorized Tech Stack by Skill Domains
-- **6 Skill Domains**: Technologies organized into Core Full-Stack Development, Data Science & ML, Excel Automation, Core Automation, Reliability & Security, Supporting Skills, plus Uncategorized
-- **Domain-Based Tech Stack Page**: Displays technologies grouped by domain with collapsible sections showing domain subtotals (hours logged/goal hours/completion %)
-- **Domain Selection**: When adding new technologies, users select which skill domain it belongs to via dropdown
-- **Domain Management**: Each tech card has settings expander allowing users to reassign technologies to different domains
-- **Auto-Migration**: Existing technologies automatically assigned "Uncategorized" domain on first load, can be reassigned via management UI
-- **Data Model Update**: Tech stack JSON now includes "domain" and "subsection" fields for future planning features
+### Category-Based Organization System
+- **Unified Category System**: Technologies now organized by planning subsection categories (Front-End, Back-End, Core Libraries, Visualization, Machine Learning, Pipelines, Databases, Deployment, Excel, Automation, Security, Supporting Skills, Uncategorized)
+- **TECH_CATEGORIES Constant**: 13 predefined categories derived from planning blueprint structure
+- **Category-Based Tech Stack**: Displays technologies grouped by category with collapsible sections showing category subtotals (hours logged/goal hours/completion %)
+- **Category Selection**: When adding new technologies, users select which category it belongs to via dropdown
+- **Category Management**: Each tech card has settings expander allowing users to reassign technologies to different categories
+- **Auto-Migration**: Data model automatically migrates old "domain" field to "category" field on load
+- **Data Model**: Tech stack JSON now uses "category" field (domain field removed from new technologies)
 
-### Planning Page - Complete Learning Roadmap
-- **Comprehensive Curriculum**: Detailed breakdown of all 6 skill domains with subsections (Front-End, Back-End, Deployment, Core Libraries, Visualization, ML, etc.)
-- **Hour Range Planning**: Each tool shows recommended min-max hours (e.g., "React: 70-90h")
-- **Subsection Subtotals**: Automatic calculation of subtotals for each subsection (e.g., "Front-End → 185–255h")
-- **Domain Totals**: Shows total hours required per domain (e.g., "Full-Stack Total → 490–665h")
-- **Grand Total Summary**: Complete overview showing 1,335–1,835 total hours across all domains
-- **Reference Blueprint**: Static planning guide to complement the dynamic Tech Stack progress tracking
+### Dynamic Planning Page
+- **Live Progress Tracking**: Planning page dynamically shows only categories where user has technologies
+- **Actual Hours Display**: Shows logged hours vs goal hours for each technology (e.g., "10.5 / 80 h")
+- **Real-Time Progress**: Displays completion percentage calculated from actual session hours
+- **Category Totals**: Automatic calculation of totals for each category showing logged/goal/progress
+- **Grand Total Summary**: Complete overview showing total logged hours, total goal hours, and overall completion percentage
+- **Smart Empty State**: Prompts users to add technologies if stack is empty
 
 ### Data Integrity & Logging Implementation
 - **Input Validation**: Hours must be 0-12, no future dates, technology cannot be empty
