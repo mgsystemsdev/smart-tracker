@@ -1146,6 +1146,89 @@ def show_tech_stack_page():
                             else:
                                 st.info("Domain unchanged")
 
+def show_planning_page():
+    """Display the complete learning roadmap with detailed hour breakdowns by subsections."""
+    # Header with MG branding
+    st.markdown("""
+    <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); padding: 1.5rem; border-radius: 15px; margin-bottom: 2rem; border: 2px solid #FFD700;">
+        <h1 style="color: #FFD700; margin: 0; text-align: center;">📋 Learning Roadmap & Planning</h1>
+        <p style="color: #C0C0C0; text-align: center; margin: 0.5rem 0 0 0;">Complete Curriculum Breakdown by Skill Domain</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Back button
+    if st.button("← Back to Home", help="Return to main page"):
+        st.session_state.current_page = "home"
+        st.rerun()
+    
+    st.markdown("---")
+    
+    # Track grand totals
+    grand_total_min = 0
+    grand_total_max = 0
+    domain_totals = []
+    
+    # Display each domain
+    for domain_name, domain_data in PLANNING_BLUEPRINT.items():
+        st.markdown(f"## {domain_name}")
+        
+        domain_min_total = 0
+        domain_max_total = 0
+        
+        # Display each subsection
+        for subsection in domain_data["subsections"]:
+            if subsection["name"]:
+                st.markdown(f"### {subsection['name']}")
+            
+            # Create dataframe for the table
+            table_data = []
+            subsection_min = 0
+            subsection_max = 0
+            
+            for tool in subsection["tools"]:
+                table_data.append({
+                    "Tool": tool["name"],
+                    "Hours": f"{tool['min_hours']}–{tool['max_hours']} h"
+                })
+                subsection_min += tool["min_hours"]
+                subsection_max += tool["max_hours"]
+            
+            # Display table
+            df = pd.DataFrame(table_data)
+            st.table(df)
+            
+            # Show subtotal if there are multiple tools or named subsection
+            if len(subsection["tools"]) > 1 or subsection["name"]:
+                st.markdown(f"**Subtotal → {subsection_min}–{subsection_max} h**")
+                st.markdown("")
+            
+            domain_min_total += subsection_min
+            domain_max_total += subsection_max
+        
+        # Domain total
+        st.markdown(f"### ✅ {domain_name.split()[1] if len(domain_name.split()) > 1 else domain_name} Total → {domain_min_total}–{domain_max_total} h")
+        st.markdown("---")
+        
+        domain_totals.append({
+            "Category": domain_name.split()[1] if len(domain_name.split()) > 1 else domain_name,
+            "Hours": f"{domain_min_total}–{domain_max_total} h"
+        })
+        
+        grand_total_min += domain_min_total
+        grand_total_max += domain_max_total
+    
+    # Grand Total Summary
+    st.markdown("## 🧮 GRAND TOTAL")
+    
+    grand_total_df = pd.DataFrame(domain_totals)
+    st.table(grand_total_df)
+    
+    st.markdown(f"### 🎯 Overall Total: **{grand_total_min} → {grand_total_max} hours**")
+    
+    # Progress indicator
+    st.markdown("")
+    st.info("💡 This is your complete learning roadmap. Visit the **Tech Stack** page to track your actual progress on each technology!")
+
 def show_learning_tracker():
     """Display the Smart Learning Tracker interface."""
     # Header with MG branding
