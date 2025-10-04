@@ -177,11 +177,16 @@ def show_home_page():
     # Professional stats section with tech stack management
     st.markdown("---")
     
-    # Initialize tech stack in session state if not exists
+    # Initialize tech stack from storage if not exists
     if "tech_stack" not in st.session_state:
-        st.session_state.tech_stack = [
-            {"name": "Python", "category": "Language"}
-        ]
+        loaded_tech_stack = st.session_state.storage.load_tech_stack()
+        if loaded_tech_stack:
+            st.session_state.tech_stack = loaded_tech_stack
+        else:
+            st.session_state.tech_stack = [
+                {"name": "Python", "category": "Language", "goal_hours": 100, "date_added": "2025-10-04"}
+            ]
+            st.session_state.storage.save_tech_stack(st.session_state.tech_stack)
     
     # Tech stack in a styled box
     st.markdown("""
@@ -236,22 +241,28 @@ def show_home_page():
             
             # Add new technology
             st.markdown("#### Add New Technology")
-            col_name, col_cat = st.columns(2)
+            col_name, col_cat, col_goal = st.columns(3)
             
             with col_name:
                 new_tech_name = st.text_input("Technology Name", placeholder="e.g., Streamlit, JavaScript, SQL")
             
             with col_cat:
-                new_tech_category = st.selectbox("Category", ["Language", "Library"])
+                new_tech_category = st.selectbox("Category", ["Language", "Framework", "Library", "Tool", "Database", "Platform", "Concept"])
+            
+            with col_goal:
+                new_goal_hours = st.number_input("Goal Hours", min_value=1, step=1, value=100)
             
             col_add, col_close = st.columns(2)
             
             with col_add:
                 if st.button("➕ Add Technology", type="primary"):
                     if new_tech_name and new_tech_category:
+                        from datetime import date
                         st.session_state.tech_stack.append({
                             "name": new_tech_name,
-                            "category": new_tech_category
+                            "category": new_tech_category,
+                            "goal_hours": new_goal_hours,
+                            "date_added": str(date.today())
                         })
                         # Save to JSON file
                         st.session_state.storage.save_tech_stack(st.session_state.tech_stack)
@@ -590,13 +601,29 @@ def show_clean_dashboard():
         # Display cards for each technology
         for tech, sessions in sorted(tech_sessions.items()):
             # Calculate stats for this technology
-            total_hours = sum(s.get('hours', 0) for s in sessions)
+            total_logged_hours = sum(s.get('hours', 0) for s in sessions)
             total_sessions = len(sessions)
             last_session_date = max(s.get('date', '') for s in sessions)
             
-            # Card styling with expandable content
-            with st.expander(f"**{tech}** • {total_hours:.1f} hrs • {total_sessions} sessions • Last: {last_session_date}", expanded=False):
-                st.markdown(f"### {tech} - All Sessions")
+            # Get goal_hours from tech_stack
+            goal_hours = 100  # default
+            for tech_obj in st.session_state.tech_stack:
+                if tech_obj.get('name') == tech:
+                    goal_hours = tech_obj.get('goal_hours', 100)
+                    break
+            
+            # Calculate progress percentage
+            progress_percentage = (total_logged_hours / goal_hours * 100) if goal_hours > 0 else 0
+            
+            # Card styling with expandable content showing progress
+            with st.expander(f"**{tech}**: {total_logged_hours:.1f}/{goal_hours} hrs ({progress_percentage:.0f}%) • {total_sessions} sessions • Last: {last_session_date}", expanded=False):
+                st.markdown(f"### {tech} - Learning Progress")
+                
+                # Progress bar visualization
+                st.progress(min(progress_percentage / 100, 1.0))
+                st.write(f"**Progress:** {total_logged_hours:.1f} / {goal_hours} hours ({progress_percentage:.1f}%)")
+                st.markdown("---")
+                st.markdown("#### All Sessions")
                 
                 # Display all sessions for this technology
                 for idx, session in enumerate(reversed(sessions)):  # Most recent first

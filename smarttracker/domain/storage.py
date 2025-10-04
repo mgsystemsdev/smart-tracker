@@ -40,7 +40,7 @@ class JSONStorage:
             print(f"Error loading sessions: {e}")
             return []
     
-    def save_tech_stack(self, tech_stack: List[Dict[str, str]]) -> bool:
+    def save_tech_stack(self, tech_stack: List[Dict[str, Any]]) -> bool:
         """Save tech stack to JSON file."""
         try:
             with open(self.tech_stack_file, 'w') as f:
@@ -50,7 +50,7 @@ class JSONStorage:
             print(f"Error saving tech stack: {e}")
             return False
     
-    def load_tech_stack(self) -> List[Dict[str, str]]:
+    def load_tech_stack(self) -> List[Dict[str, Any]]:
         """Load tech stack from JSON file."""
         try:
             if self.tech_stack_file.exists():
