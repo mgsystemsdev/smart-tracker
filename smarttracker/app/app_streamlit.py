@@ -23,8 +23,8 @@ logging.basicConfig(
 def validate_session(session_date, technology, hours):
     """Validate session data. Returns (is_valid, error_message)."""
     # Check hours
-    if hours <= 0 or hours > 12:
-        return False, "⚠️ Hours must be between 0 and 12"
+    if hours < 0 or hours > 12:
+        return False, "⚠️ Hours must be between 0 and 12 (inclusive)"
     
     # Check future date
     if session_date > date.today():

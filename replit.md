@@ -10,6 +10,14 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (October 4, 2025)
 
+### Data Integrity & Logging Implementation
+- **Input Validation**: Hours must be 0-12, no future dates, technology cannot be empty
+- **Activity Logging**: All CRUD operations logged to /logs/activity.log with timestamps
+- **Dynamic Technology Entry**: Text input with suggestions replaces fixed dropdown
+- **Auto-Add to Tech Stack**: New technologies automatically added to stack when sessions are saved
+- **Validation Feedback**: User-friendly error messages displayed on validation failure
+- **Audit Trail**: Complete logging of add, edit, delete operations plus validation failures
+
 ### Technology Object Model with Goal-Based Progress
 - **Tech Stack Objects**: Each technology is now a full object with name, category, goal_hours, and date_added
 - **Expanded Categories**: Seven category types - Language, Framework, Library, Tool, Database, Platform, Concept
@@ -27,6 +35,7 @@ Preferred communication style: Simple, everyday language.
 ### UI Improvements
 - **Dashboard Renamed**: "Clean Dashboard" simplified to just "Dashboard"
 - **Demo Section Removed**: Cleaned up home page by removing system demo buttons
+- **Flexible Technology Input**: Type custom technologies or use suggestions from tech stack
 
 ## System Architecture
 

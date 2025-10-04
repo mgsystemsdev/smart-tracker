@@ -48,7 +48,7 @@ Smart Tracker includes built-in validation and logging to ensure data accuracy a
 
 The app enforces these rules when adding or editing sessions:
 
-- ✅ **Hours**: Must be greater than 0 and not exceed 12 hours
+- ✅ **Hours**: Must be between 0 and 12 (inclusive) - allows quick logs or placeholder entries
 - ✅ **Dates**: Cannot be in the future (prevents accidental future entries)
 - ✅ **Technology**: Cannot be empty; custom technologies are automatically added to your tech stack
 
