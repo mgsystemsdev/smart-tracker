@@ -7,6 +7,16 @@ import json
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 
+SKILL_DOMAINS = [
+    "🌐 Core Full-Stack Development",
+    "📊 Data Science & Machine Learning",
+    "📑 Excel Automation & Data Handling",
+    "⚙️ Core Automation (Support Layer)",
+    "🔒 Reliability & Security",
+    "🧰 Supporting Skills",
+    "❓ Uncategorized"
+]
+
 
 class JSONStorage:
     """Handles JSON-based storage for learning sessions and configuration."""
@@ -51,11 +61,25 @@ class JSONStorage:
             return False
     
     def load_tech_stack(self) -> List[Dict[str, Any]]:
-        """Load tech stack from JSON file."""
+        """Load tech stack from JSON file with automatic migration for domain field."""
         try:
             if self.tech_stack_file.exists():
                 with open(self.tech_stack_file, 'r') as f:
-                    return json.load(f)
+                    tech_stack = json.load(f)
+                
+                needs_save = False
+                for tech in tech_stack:
+                    if "domain" not in tech:
+                        tech["domain"] = "❓ Uncategorized"
+                        needs_save = True
+                    if "subsection" not in tech:
+                        tech["subsection"] = None
+                        needs_save = True
+                
+                if needs_save:
+                    self.save_tech_stack(tech_stack)
+                
+                return tech_stack
             return []
         except Exception as e:
             print(f"Error loading tech stack: {e}")
