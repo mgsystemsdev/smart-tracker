@@ -206,18 +206,7 @@ def show_home_page():
     # Initialize tech stack in session state if not exists
     if "tech_stack" not in st.session_state:
         st.session_state.tech_stack = [
-            {"name": "Python 3.11+", "category": "Backend Language"},
-            {"name": "JavaScript ES6+", "category": "Frontend Language"},
-            {"name": "React 18", "category": "UI Framework"},
-            {"name": "Node.js", "category": "Runtime Environment"},
-            {"name": "Streamlit", "category": "Web Interface"},
-            {"name": "FastAPI", "category": "API Framework"},
-            {"name": "PostgreSQL", "category": "Database"},
-            {"name": "Docker", "category": "Containerization"},
-            {"name": "Git/GitHub", "category": "Version Control"},
-            {"name": "VS Code", "category": "Development IDE"},
-            {"name": "Typer CLI", "category": "Command Line"},
-            {"name": "Pydantic", "category": "Data Validation"}
+            {"name": "Python", "category": "Language"}
         ]
     
     # Tech stack in a styled box
@@ -276,10 +265,10 @@ def show_home_page():
             col_name, col_cat = st.columns(2)
             
             with col_name:
-                new_tech_name = st.text_input("Technology Name", placeholder="e.g., React, Docker, PostgreSQL")
+                new_tech_name = st.text_input("Technology Name", placeholder="e.g., Streamlit, JavaScript, SQL")
             
             with col_cat:
-                new_tech_category = st.text_input("Category", placeholder="e.g., Frontend, DevOps, Database")
+                new_tech_category = st.selectbox("Category", ["Language", "Library"])
             
             col_add, col_close = st.columns(2)
             
@@ -377,7 +366,6 @@ def show_clean_dashboard():
                     edit_difficulty = st.selectbox("Difficulty", ["Beginner", "Intermediate", "Advanced", "Expert"],
                         index=["Beginner", "Intermediate", "Advanced", "Expert"].index(session.get('difficulty', 'Beginner')) if session.get('difficulty') in ["Beginner", "Intermediate", "Advanced", "Expert"] else 0)
                     edit_hours = st.number_input("Hours Spent", min_value=0.0, value=float(session.get('hours', 1.0)), step=0.25)
-                    edit_progress = st.slider("Progress (%)", 0, 100, int(session.get('progress', 50)))
                     edit_status = st.selectbox("Status", ["In Progress", "Completed", "Paused", "Planned"],
                         index=["In Progress", "Completed", "Paused", "Planned"].index(session.get('status', 'In Progress')) if session.get('status') in ["In Progress", "Completed", "Paused", "Planned"] else 0)
                 
@@ -407,8 +395,6 @@ def show_clean_dashboard():
                         "difficulty": edit_difficulty,
                         "status": edit_status,
                         "hours": edit_hours,
-                        "target_hours": session.get('target_hours', 0),
-                        "progress": edit_progress,
                         "tags": edit_tags,
                         "notes": edit_notes
                     }
@@ -468,7 +454,7 @@ def show_clean_dashboard():
             status_filter = st.selectbox("Status", unique_statuses, key="status_filter")
         
         with col_sort:
-            sort_options = ['Date (Newest)', 'Date (Oldest)', 'Hours (Most)', 'Hours (Least)', 'Progress (High)', 'Progress (Low)']
+            sort_options = ['Date (Newest)', 'Date (Oldest)', 'Hours (Most)', 'Hours (Least)']
             sort_by = st.selectbox("Sort By", sort_options, key="sort_filter")
         
         # Apply filters
@@ -492,10 +478,6 @@ def show_clean_dashboard():
             filtered_sessions = sorted(filtered_sessions, key=lambda x: x['hours'], reverse=True)
         elif sort_by == 'Hours (Least)':
             filtered_sessions = sorted(filtered_sessions, key=lambda x: x['hours'])
-        elif sort_by == 'Progress (High)':
-            filtered_sessions = sorted(filtered_sessions, key=lambda x: x['progress'], reverse=True)
-        elif sort_by == 'Progress (Low)':
-            filtered_sessions = sorted(filtered_sessions, key=lambda x: x['progress'])
         
         # Clear filters button
         if st.button("🗑️ Clear All Filters"):
@@ -547,15 +529,10 @@ def show_clean_dashboard():
                         
                         with col_stats:
                             st.write(f"**Hours:** {session['hours']}")
-                            st.write(f"**Progress:** {session['progress']}%")
                             st.write(f"**Tags:** {session.get('tags', 'None')}")
                         
                         if session.get('notes'):
                             st.write(f"**Notes:** {session['notes']}")
-                        
-                        # Progress bar
-                        progress_val = session['progress'] / 100
-                        st.progress(progress_val, text=f"Progress: {session['progress']}%")
                         
                         # Action buttons
                         st.markdown("---")
@@ -623,97 +600,68 @@ def show_clean_dashboard():
         else:
             st.metric("Learning Streak", "0 days")
     
-    # Learning Analytics and Insights
+    # Technology Cards - Expandable view
     st.markdown("---")
-    st.subheader("📈 Learning Analytics")
+    st.subheader("🎯 My Learning Progress")
     
     if st.session_state.learning_sessions:
-        # Progress tracking over time
-        col_chart, col_insights = st.columns([2, 1])
+        # Group sessions by technology
+        tech_sessions = {}
+        for session in st.session_state.learning_sessions:
+            tech = session.get('technology', 'Other')
+            if tech not in tech_sessions:
+                tech_sessions[tech] = []
+            tech_sessions[tech].append(session)
         
-        with col_chart:
-            st.markdown("#### 📊 Progress Trends")
+        # Display cards for each technology
+        for tech, sessions in sorted(tech_sessions.items()):
+            # Calculate stats for this technology
+            total_hours = sum(s.get('hours', 0) for s in sessions)
+            total_sessions = len(sessions)
+            last_session_date = max(s.get('date', '') for s in sessions)
             
-            # Convert sessions to DataFrame for analysis
-            df = pd.DataFrame(st.session_state.learning_sessions)
-            df['date'] = pd.to_datetime(df['date'])
-            
-            # Daily hours chart
-            daily_hours = df.groupby('date')['hours'].sum().reset_index()
-            if not daily_hours.empty:
-                st.line_chart(daily_hours.set_index('date')['hours'])
-                st.caption("Daily learning hours over time")
-            
-            # Technology distribution
-            tech_dist = df['technology'].value_counts()
-            if not tech_dist.empty:
-                st.bar_chart(tech_dist)
-                st.caption("Sessions by technology")
-        
-        with col_insights:
-            st.markdown("#### 🎯 Learning Insights")
-            
-            # Calculate insights
-            avg_hours = df['hours'].mean()
-            most_common_tech = df['technology'].mode().iloc[0] if not df.empty else "None"
-            avg_progress = df['progress'].mean()
-            favorite_type = df['type'].mode().iloc[0] if not df.empty else "None"
-            
-            st.metric("Avg Hours/Session", f"{avg_hours:.1f}")
-            st.write(f"**Primary Focus:** {most_common_tech}")
-            st.write(f"**Avg Progress:** {avg_progress:.0f}%")
-            st.write(f"**Preferred Type:** {favorite_type}")
-            
-            # Learning consistency
-            unique_dates = df['date'].dt.date.nunique()
-            total_days = (df['date'].max() - df['date'].min()).days + 1 if len(df) > 1 else 1
-            consistency = (unique_dates / total_days) * 100 if total_days > 0 else 0
-            
-            st.metric("Learning Consistency", f"{consistency:.1f}%")
-            
-        # Skill progression matrix
-        st.markdown("#### 🎖️ Skill Progression")
-        
-        # Group by technology and difficulty to show progression
-        tech_difficulty = df.groupby(['technology', 'difficulty']).size().unstack(fill_value=0)
-        
-        if not tech_difficulty.empty:
-            # Create a simple progression view
-            for tech in tech_difficulty.index:
-                st.write(f"**{tech}:**")
-                difficulty_levels = ['Beginner', 'Intermediate', 'Advanced', 'Expert']
-                progress_bar_data = []
+            # Card styling with expandable content
+            with st.expander(f"**{tech}** • {total_hours:.1f} hrs • {total_sessions} sessions • Last: {last_session_date}", expanded=False):
+                st.markdown(f"### {tech} - All Sessions")
                 
-                for level in difficulty_levels:
-                    count = tech_difficulty.loc[tech, level] if level in tech_difficulty.columns else 0
-                    progress_bar_data.append(count)
-                
-                # Simple progress display
-                total_sessions = sum(progress_bar_data)
-                if total_sessions > 0:
-                    beginner_pct = (progress_bar_data[0] / total_sessions) * 100
-                    intermediate_pct = (progress_bar_data[1] / total_sessions) * 100
-                    advanced_pct = (progress_bar_data[2] / total_sessions) * 100
-                    expert_pct = (progress_bar_data[3] / total_sessions) * 100
+                # Display all sessions for this technology
+                for idx, session in enumerate(reversed(sessions)):  # Most recent first
+                    # Find the actual index in the full sessions list
+                    session_index = st.session_state.learning_sessions.index(session)
                     
-                    col1, col2, col3, col4 = st.columns(4)
-                    col1.metric("Beginner", f"{progress_bar_data[0]}")
-                    col2.metric("Intermediate", f"{progress_bar_data[1]}")
-                    col3.metric("Advanced", f"{progress_bar_data[2]}")
-                    col4.metric("Expert", f"{progress_bar_data[3]}")
-                
-                st.markdown("---")
+                    st.markdown("---")
+                    col_info, col_actions = st.columns([3, 1])
+                    
+                    with col_info:
+                        st.write(f"**📅 {session['date']}** - {session.get('topic', 'Untitled')}")
+                        st.write(f"**Type:** {session.get('type', 'N/A')} | **Hours:** {session.get('hours', 0)} | **Status:** {session.get('status', 'N/A')}")
+                        st.write(f"**Difficulty:** {session.get('difficulty', 'N/A')}")
+                        if session.get('tags'):
+                            st.write(f"**Tags:** {session['tags']}")
+                        if session.get('notes'):
+                            st.write(f"**Notes:** {session['notes']}")
+                    
+                    with col_actions:
+                        if st.button("✏️ Edit", key=f"edit_card_{session_index}"):
+                            st.session_state.editing_session = session_index
+                            st.rerun()
+                        
+                        if st.button("🗑️ Delete", key=f"delete_card_{session_index}"):
+                            st.session_state.learning_sessions.pop(session_index)
+                            st.session_state.storage.save_sessions(st.session_state.learning_sessions)
+                            st.success("Session deleted!")
+                            st.rerun()
     
     else:
-        # Empty state with motivational content
+        # Empty state
         st.markdown("""
         <div style="text-align: center; padding: 3rem; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 10px; border: 1px solid #FFD700;">
-            <h3 style="color: #FFD700;">🚀 Start Your Learning Journey</h3>
+            <h3 style="color: #FFD700;">🚀 Start Tracking Your Work</h3>
             <p style="color: #C0C0C0; font-size: 1.1rem;">
-                Begin tracking your development progress to unlock powerful insights about your learning patterns.
+                Log your learning sessions and watch your progress grow automatically.
             </p>
             <p style="color: #00CED1; font-size: 0.9rem;">
-                Use the Smart Learning Tracker to add your first session and watch your progress grow!
+                Use the Smart Learning Tracker to add your first session!
             </p>
         </div>
         """, unsafe_allow_html=True)
@@ -734,8 +682,9 @@ def show_clean_dashboard():
             df = pd.DataFrame(st.session_state.learning_sessions)
             if not df.empty:
                 # Reorder columns for better display
-                display_columns = ['date', 'technology', 'topic', 'type', 'difficulty', 'hours', 'status', 'progress']
-                df_display = df[display_columns]
+                display_columns = ['date', 'technology', 'topic', 'type', 'difficulty', 'hours', 'status']
+                available_columns = [col for col in display_columns if col in df.columns]
+                df_display = df[available_columns]
                 st.dataframe(df_display, height=300)
                 
                 # Clear all sessions button
@@ -788,9 +737,6 @@ def show_learning_tracker():
             status = st.selectbox("Status", ["In Progress", "Completed", "Paused", "Planned"])
             
             hours_spent = st.number_input("Hours Spent", min_value=0.0, value=1.0, step=0.25)
-            target_hours = st.number_input("Target Hours", min_value=0.0, value=2.0, step=0.25)
-            
-            progress = st.slider("Progress (%)", 0, 100, 50)
             session_type = st.selectbox("Session Type", ["Coding", "Reading", "Tutorial", "Practice", "Project", "Course"])
             
             tags = st.text_area("Tags", placeholder="Enter tags separated by commas...")
@@ -814,8 +760,6 @@ def show_learning_tracker():
                     "difficulty": difficulty,
                     "status": status,
                     "hours": hours_spent,
-                    "target_hours": target_hours,
-                    "progress": progress,
                     "tags": tags,
                     "notes": notes
                 }
@@ -887,9 +831,7 @@ def show_learning_tracker():
                     
                     with col_progress:
                         st.metric("Hours", session['hours'])
-                        st.metric("Target", session.get('target_hours', 0))
-                        progress_val = session.get('progress', 0) / 100
-                        st.progress(progress_val, text=f"{session.get('progress', 0)}%")
+                        st.metric("Type", session.get('type', 'N/A'))
                     
                     if session.get('tags'):
                         st.write(f"**Tags:** {session['tags']}")
