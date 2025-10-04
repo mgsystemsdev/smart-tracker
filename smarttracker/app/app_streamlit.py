@@ -42,7 +42,7 @@ def get_tech_list(tech_stack):
         return ["Python", "Pandas", "Streamlit", "FastAPI", "SQL", "AI/ML"]
     return [tech['name'] for tech in tech_stack]
 
-def ensure_tech_in_stack(technology, tech_stack, storage):
+def ensure_tech_in_stack(technology, tech_stack, storage, domain="❓ Uncategorized"):
     """Add technology to tech stack if it doesn't exist."""
     tech_names = [tech['name'] for tech in tech_stack]
     if technology not in tech_names:
@@ -50,11 +50,13 @@ def ensure_tech_in_stack(technology, tech_stack, storage):
             "name": technology,
             "category": "Library",
             "goal_hours": 50,
-            "date_added": str(date.today())
+            "date_added": str(date.today()),
+            "domain": domain,
+            "subsection": None
         }
         tech_stack.append(new_tech)
         storage.save_tech_stack(tech_stack)
-        logging.info(f"Auto-added technology to stack: {technology}")
+        logging.info(f"Auto-added technology to stack: {technology} in domain: {domain}")
         return True
     return False
 
@@ -1026,6 +1028,10 @@ def show_learning_tracker():
             st.markdown("**Technology** _(type to add new)_")
             technology = st.text_input("tech_add", label_visibility="collapsed", placeholder="Type technology name...")
             st.caption(f"💡 Suggestions: {', '.join(tech_list[:6])}")
+            
+            st.markdown("**Skill Domain** _(for new technologies)_")
+            tech_domain = st.selectbox("Select domain for new techs", SKILL_DOMAINS[:-1], label_visibility="collapsed", help="Select which skill domain this technology belongs to if it's new")
+            
             work_item = st.text_input("Work Item", placeholder="Enter project or resource...")
             skill = st.text_input("Skill/Topic", placeholder="Enter specific skill or topic...")
             
@@ -1053,8 +1059,8 @@ def show_learning_tracker():
                     st.error(error_msg)
                     logging.warning(f"Validation failed: {error_msg} | Date: {session_date}, Tech: {technology}, Hours: {hours_spent}")
                 else:
-                    # Ensure technology is in stack
-                    ensure_tech_in_stack(technology, st.session_state.tech_stack, st.session_state.storage)
+                    # Ensure technology is in stack (with specified domain for new techs)
+                    ensure_tech_in_stack(technology, st.session_state.tech_stack, st.session_state.storage, domain=tech_domain)
                     
                     # Create session object compatible with dashboard
                     new_session = {
