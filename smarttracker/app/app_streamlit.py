@@ -1475,27 +1475,28 @@ def show_learning_tracker():
         # Get available technologies from tech stack
         tech_list = get_tech_list(st.session_state.tech_stack)
         
-        # Show quick-select buttons for recent technologies (outside form)
-        if tech_list:
-            st.markdown("**📌 Quick Select (or type below):**")
-            cols = st.columns(min(len(tech_list), 5))
-            for idx, tech in enumerate(tech_list[:5]):
-                with cols[idx]:
-                    if st.button(tech, key=f"quick_tech_{idx}", use_container_width=True):
-                        st.session_state.selected_tech = tech
-        
         with st.form("smart_tracker_form"):
             # Form fields matching the desktop app
             session_date = st.date_input("Session Date", value=date.today())
-            st.markdown("**Technology** _(or use quick select above)_")
             
-            # Pre-fill if user clicked a button
-            default_tech = st.session_state.get("selected_tech", "")
-            technology = st.text_input("tech_input", value=default_tech, placeholder="Type technology name...", label_visibility="collapsed")
+            # Technology selection with dropdown
+            st.markdown("**Technology**")
             
-            # Clear the selected tech after it's been used
-            if st.session_state.get("selected_tech"):
-                st.session_state.selected_tech = ""
+            # Create dropdown options: existing technologies + option to add new
+            tech_options = ["➕ Type New Technology..."] + tech_list if tech_list else ["➕ Type New Technology..."]
+            
+            selected_option = st.selectbox(
+                "tech_dropdown",
+                options=tech_options,
+                label_visibility="collapsed",
+                help="Select from existing technologies or choose '➕ Type New Technology...' to add a new one"
+            )
+            
+            # If user wants to add new tech, show text input
+            if selected_option == "➕ Type New Technology...":
+                technology = st.text_input("New technology name", placeholder="Type technology name...", key="new_tech_input")
+            else:
+                technology = selected_option
 
             
             st.markdown("**Category** _(for new technologies)_")
