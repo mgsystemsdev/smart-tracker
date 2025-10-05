@@ -1051,8 +1051,14 @@ def show_clean_dashboard():
                 
                 # Display all sessions for this technology
                 for idx, session in enumerate(reversed(sessions)):  # Most recent first
+                    # Create unique key for this session
+                    session_key = hash(f"{tech}_{session['date']}_{session.get('hours')}_{idx}")
+                    
                     # Find the actual index in the full sessions list
-                    session_index = st.session_state.learning_sessions.index(session)
+                    try:
+                        session_index = st.session_state.learning_sessions.index(session)
+                    except ValueError:
+                        continue
                     
                     st.markdown("---")
                     col_info, col_actions = st.columns([3, 1])
@@ -1067,11 +1073,11 @@ def show_clean_dashboard():
                             st.write(f"**Notes:** {session['notes']}")
                     
                     with col_actions:
-                        if st.button("✏️ Edit", key=f"edit_card_{session_index}"):
+                        if st.button("✏️ Edit", key=f"edit_card_{session_key}"):
                             st.session_state.editing_session = session_index
                             st.rerun()
                         
-                        if st.button("🗑️ Delete", key=f"delete_card_{session_index}"):
+                        if st.button("🗑️ Delete", key=f"delete_card_{session_key}"):
                             # Log before deleting to capture session info
                             deleted_session = st.session_state.learning_sessions[session_index]
                             logging.info(f"Deleted session #{session_index}: {deleted_session.get('hours')}h {deleted_session.get('technology')} ({deleted_session.get('date')})")
