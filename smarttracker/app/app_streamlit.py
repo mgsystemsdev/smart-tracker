@@ -9,8 +9,15 @@ import pandas as pd
 from datetime import date, datetime
 import logging
 import os
-from smarttracker import __version__
+import sys
+from pathlib import Path
+
+# Add parent directory to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+
 from smarttracker.domain.storage import JSONStorage, TECH_CATEGORIES
+
+__version__ = "0.1.0"
 
 # Setup logging
 os.makedirs("logs", exist_ok=True)
