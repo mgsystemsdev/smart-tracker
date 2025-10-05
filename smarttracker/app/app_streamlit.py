@@ -906,9 +906,15 @@ def show_clean_dashboard():
             
             if filtered_sessions:
                 # Display filtered and sorted sessions
-                for i, session in enumerate(filtered_sessions):
-                    # Get the actual index in the full sessions list
-                    session_index = st.session_state.learning_sessions.index(session)
+                for display_idx, session in enumerate(filtered_sessions):
+                    # Create unique key using hash of session data
+                    session_key = hash(f"{session['date']}_{session['technology']}_{session.get('hours')}_{display_idx}")
+                    
+                    # Get the actual index in the full sessions list for operations
+                    try:
+                        session_index = st.session_state.learning_sessions.index(session)
+                    except ValueError:
+                        continue
                     
                     # Color-code status
                     status_color = {
@@ -939,12 +945,12 @@ def show_clean_dashboard():
                         col_edit, col_delete, col_spacer = st.columns([1, 1, 2])
                         
                         with col_edit:
-                            if st.button("✏️ Edit", key=f"edit_{session_index}", type="secondary"):
+                            if st.button("✏️ Edit", key=f"edit_{session_key}", type="secondary"):
                                 st.session_state.editing_session = session_index
                                 st.rerun()
                         
                         with col_delete:
-                            if st.button("🗑️ Delete", key=f"delete_{session_index}", type="secondary"):
+                            if st.button("🗑️ Delete", key=f"delete_{session_key}", type="secondary"):
                                 # Log before deleting to capture session info
                                 deleted_session = st.session_state.learning_sessions[session_index]
                                 logging.info(f"Deleted session #{session_index}: {deleted_session.get('hours')}h {deleted_session.get('technology')} ({deleted_session.get('date')})")
