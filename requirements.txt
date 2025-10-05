@@ -1,11 +1,3 @@
-# Smart Tracker - Minimal Personal Learning Tracker
-# Generated from actual imports in the codebase
-
-# Web Interface
-streamlit>=1.49.1
-
-# CLI Framework  
+streamlit>=1.20.0
 typer>=0.17.3
-
-# Data Processing
 pandas>=2.0.0
