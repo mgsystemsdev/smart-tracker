@@ -1076,6 +1076,9 @@ def show_clean_dashboard():
             # Calculate progress percentage
             progress_percentage = (total_logged_hours / goal_hours * 100) if goal_hours > 0 else 0
             
+            # Get studying/practice breakdown
+            breakdown = get_studying_practice_breakdown(sessions, tech)
+            
             # Card styling with expandable content showing progress
             with st.expander(f"**{tech}**: {total_logged_hours:.1f}/{goal_hours} hrs ({progress_percentage:.0f}%) • {total_sessions} sessions • Last: {last_session_date}", expanded=False):
                 st.markdown(f"### {tech} - Learning Progress")
@@ -1083,6 +1086,18 @@ def show_clean_dashboard():
                 # Progress bar visualization
                 st.progress(min(progress_percentage / 100, 1.0))
                 st.write(f"**Progress:** {total_logged_hours:.1f} / {goal_hours} hours ({progress_percentage:.1f}%)")
+                
+                # Studying vs Practice breakdown
+                st.markdown("---")
+                st.markdown("#### 📊 Session Type Breakdown")
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric("Total", f"{breakdown['total_hours']:.1f}h", help="Total hours logged")
+                with col2:
+                    st.metric("📚 Studying", f"{breakdown['studying_hours']:.1f}h ({breakdown['studying_pct']:.0f}%)", help="Hours spent studying")
+                with col3:
+                    st.metric("💪 Practice", f"{breakdown['practice_hours']:.1f}h ({breakdown['practice_pct']:.0f}%)", help="Hours spent practicing")
+                
                 st.markdown("---")
                 st.markdown("#### All Sessions")
                 
