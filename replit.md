@@ -8,9 +8,18 @@ Smart Tracker is a minimal personal learning tracker featuring a simplified work
 
 Preferred communication style: Simple, everyday language.
 
-## Recent Changes (October 4, 2025)
+## Recent Changes (October 5, 2025)
 
-### Category-Based Organization System
+### Studying vs Practice Tracking (20/80 Rule)
+- **Simplified Session Types**: Session type dropdown now only offers "Studying" or "Practice" to focus on learning vs doing
+- **Breakdown Calculation**: New helper function calculates studying/practice hours breakdown per technology
+- **Visual Indicators**: Shows 📚 for studying hours and 💪 for practice hours with percentages
+- **Dashboard Display**: Each technology card expands to show session type breakdown (Total, Studying %, Practice %)
+- **Tech Stack Integration**: Technology cards display studying/practice metrics with visual indicators
+- **Planning Roadmap**: Tables include studying/practice breakdown columns for each technology
+- **20/80 Monitoring**: Enables tracking if technologies maintain the recommended 20% studying, 80% practice ratio
+
+### Category-Based Organization System (October 4, 2025)
 - **Unified Category System**: Technologies now organized by planning subsection categories (Front-End, Back-End, Core Libraries, Visualization, Machine Learning, Pipelines, Databases, Deployment, Excel, Automation, Security, Supporting Skills, Uncategorized)
 - **TECH_CATEGORIES Constant**: 13 predefined categories derived from planning blueprint structure
 - **Category-Based Tech Stack**: Displays technologies grouped by category with collapsible sections showing category subtotals (hours logged/goal hours/completion %)
