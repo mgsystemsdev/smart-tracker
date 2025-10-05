@@ -1533,7 +1533,7 @@ def show_learning_tracker():
             status = st.selectbox("Status", ["In Progress", "Completed", "Paused", "Planned"])
             
             hours_spent = st.number_input("Hours Spent", min_value=0.0, value=1.0, step=0.25)
-            session_type = st.selectbox("Session Type", ["Coding", "Reading", "Tutorial", "Practice", "Project", "Course"])
+            session_type = st.selectbox("Session Type", ["Studying", "Practice"])
             
             tags = st.text_area("Tags", placeholder="Enter tags separated by commas...")
             notes = st.text_area("Notes", placeholder="Detailed notes about this session...")
