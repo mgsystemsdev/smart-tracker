@@ -1465,10 +1465,16 @@ def show_planning_page():
             goal = tech['goal_hours']
             completion = f"{int((logged / goal) * 100)}%" if goal > 0 else "0%"
             
+            # Get studying/practice breakdown
+            tech_sessions = [s for s in learning_sessions if s.get('technology') == tech['name']]
+            breakdown = get_studying_practice_breakdown(tech_sessions)
+            
             table_data.append({
                 "Technology": tech['name'],
                 "Logged": f"{logged:.1f} h",
                 "Goal": f"{goal} h",
+                "📚 Studying": f"{breakdown['studying_hours']:.1f}h ({breakdown['studying_pct']:.0f}%)",
+                "💪 Practice": f"{breakdown['practice_hours']:.1f}h ({breakdown['practice_pct']:.0f}%)",
                 "Progress": completion
             })
             
