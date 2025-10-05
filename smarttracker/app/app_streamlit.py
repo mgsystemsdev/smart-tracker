@@ -1342,6 +1342,18 @@ def show_tech_stack_page():
                     st.progress(min(progress_pct / 100, 1.0))
                     st.caption(f"📚 {session_count} sessions logged")
                     
+                    # Studying vs Practice breakdown
+                    if tech_sessions:
+                        breakdown = get_studying_practice_breakdown(tech_sessions)
+                        st.markdown("##### 📊 Session Type Breakdown")
+                        col_sp1, col_sp2, col_sp3 = st.columns(3)
+                        with col_sp1:
+                            st.metric("Total", f"{breakdown['total_hours']:.1f}h")
+                        with col_sp2:
+                            st.metric("📚 Studying", f"{breakdown['studying_hours']:.1f}h ({breakdown['studying_pct']:.0f}%)")
+                        with col_sp3:
+                            st.metric("💪 Practice", f"{breakdown['practice_hours']:.1f}h ({breakdown['practice_pct']:.0f}%)")
+                    
                     # Category management
                     with st.expander("⚙️ Manage Tech Settings", expanded=False):
                         # Quick add new category
