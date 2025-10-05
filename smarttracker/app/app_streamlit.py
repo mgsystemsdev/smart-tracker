@@ -197,6 +197,36 @@ def ensure_tech_in_stack(technology, tech_stack, storage, category="❓ Uncatego
         return True
     return False
 
+def get_studying_practice_breakdown(sessions, technology=None):
+    """Calculate studying vs practice hours breakdown.
+    
+    Args:
+        sessions: List of session dictionaries
+        technology: Optional technology name to filter by
+    
+    Returns:
+        dict with total_hours, studying_hours, studying_pct, practice_hours, practice_pct
+    """
+    # Filter sessions if technology is specified
+    if technology:
+        sessions = [s for s in sessions if s.get('technology') == technology]
+    
+    total_hours = sum(s.get('hours', 0) for s in sessions)
+    studying_hours = sum(s.get('hours', 0) for s in sessions if s.get('type') == 'Studying')
+    practice_hours = sum(s.get('hours', 0) for s in sessions if s.get('type') == 'Practice')
+    
+    # Calculate percentages
+    studying_pct = (studying_hours / total_hours * 100) if total_hours > 0 else 0
+    practice_pct = (practice_hours / total_hours * 100) if total_hours > 0 else 0
+    
+    return {
+        'total_hours': total_hours,
+        'studying_hours': studying_hours,
+        'studying_pct': studying_pct,
+        'practice_hours': practice_hours,
+        'practice_pct': practice_pct
+    }
+
 def show_home_page():
     """Display the professional home page with MG System Dev branding."""
     
