@@ -1733,29 +1733,36 @@ def main():
     """Main Streamlit application function."""
     # Page configuration
     st.set_page_config(
-        page_title="MG Smart Tracker | System Dev",
+        page_title="MG Smart Tracker v2.0 | System Dev",
         page_icon="⚡",
         layout="wide",
         initial_sidebar_state="expanded"
     )
     
-    # Initialize JSON storage
+    # Initialize database (v2.0)
+    if "db" not in st.session_state:
+        from smarttracker.domain.db_storage import DatabaseStorage
+        st.session_state.db = DatabaseStorage()
+    
+    # Initialize JSON storage (legacy compatibility)
     if "storage" not in st.session_state:
         st.session_state.storage = JSONStorage()
     
     # Initialize session state
     if "current_page" not in st.session_state:
-        st.session_state.current_page = "home"
+        st.session_state.current_page = "home_v2"
     
-    # Load learning sessions from JSON file
+    # Load learning sessions from database
     if "learning_sessions" not in st.session_state:
-        st.session_state.learning_sessions = st.session_state.storage.load_sessions()
+        all_sessions = st.session_state.db.get_all_sessions()
+        # Transform to old format for compatibility
+        st.session_state.learning_sessions = all_sessions
     
-    # Load tech stack from JSON file
+    # Load tech stack from database
     if "tech_stack_loaded" not in st.session_state:
-        loaded_tech_stack = st.session_state.storage.load_tech_stack()
-        if loaded_tech_stack:
-            st.session_state.tech_stack = loaded_tech_stack
+        tech_stack = st.session_state.db.get_all_tech_stack()
+        if tech_stack:
+            st.session_state.tech_stack = tech_stack
         st.session_state.tech_stack_loaded = True
     
     # Main header with MG branding
@@ -1778,24 +1785,32 @@ def main():
         st.markdown("### 🎯 Navigation")
         
         # Navigation buttons with professional styling
-        if st.button("🏠 Home", width="stretch"):
-            st.session_state.current_page = "home"
+        if st.button("🏠 Home Dashboard", width="stretch"):
+            st.session_state.current_page = "home_v2"
             st.rerun()
         
-        if st.button("📚 Dashboard", width="stretch"):
+        if st.button("📚 Sessions", width="stretch"):
             st.session_state.current_page = "clean_dashboard"
             st.rerun()
             
-        if st.button("🎓 Learning Tracker", width="stretch"):
+        if st.button("🎓 Log Session", width="stretch"):
             st.session_state.current_page = "learning_tracker"
             st.rerun()
         
-        if st.button("🎯 Tech Stack", width="stretch"):
-            st.session_state.current_page = "tech_stack"
+        if st.button("🎯 Tech Stack CRUD", width="stretch"):
+            st.session_state.current_page = "tech_stack_crud"
             st.rerun()
         
         if st.button("📋 Planning", width="stretch"):
             st.session_state.current_page = "planning"
+            st.rerun()
+        
+        if st.button("🧮 Calculator", width="stretch"):
+            st.session_state.current_page = "calculator"
+            st.rerun()
+        
+        if st.button("📝 Dropdown Manager", width="stretch"):
+            st.session_state.current_page = "dropdown_manager"
             st.rerun()
         
         st.markdown("---")
@@ -1819,7 +1834,23 @@ def main():
         """, unsafe_allow_html=True)
     
     # Display the appropriate page
-    if st.session_state.current_page == "home":
+    if st.session_state.current_page == "home_v2":
+        # Import and show new Home KPI Dashboard
+        from smarttracker.app.pages.home_kpi_dashboard import show_home_kpi_dashboard
+        show_home_kpi_dashboard()
+    elif st.session_state.current_page == "tech_stack_crud":
+        # Import and show Tech Stack CRUD page
+        from smarttracker.app.pages.tech_stack_crud_page import show_tech_stack_crud_page
+        show_tech_stack_crud_page()
+    elif st.session_state.current_page == "calculator":
+        # Import and show Calculator page
+        from smarttracker.app.pages.calculator_page import show_calculator_page
+        show_calculator_page()
+    elif st.session_state.current_page == "dropdown_manager":
+        # Import and show Dropdown Manager page
+        from smarttracker.app.pages.dropdown_manager_page import show_dropdown_manager_page
+        show_dropdown_manager_page()
+    elif st.session_state.current_page == "home":
         show_home_page()
     elif st.session_state.current_page == "clean_dashboard":
         show_clean_dashboard()

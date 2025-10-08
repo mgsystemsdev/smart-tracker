@@ -23,7 +23,8 @@ class DatabaseStorage:
     def _get_connection(self) -> sqlite3.Connection:
         """Get database connection with row factory."""
         if self.conn is None:
-            self.conn = sqlite3.connect(self.db_path)
+            # Use check_same_thread=False for Streamlit compatibility (multi-threaded environment)
+            self.conn = sqlite3.connect(self.db_path, check_same_thread=False)
             self.conn.row_factory = sqlite3.Row
         return self.conn
     

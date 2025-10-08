@@ -44,7 +44,11 @@ class DataMigration:
         if self.custom_cat_file.exists():
             with open(self.custom_cat_file, 'r') as f:
                 data = json.load(f)
-                custom_categories = data.get('categories', [])
+                # Handle both list and dict formats
+                if isinstance(data, list):
+                    custom_categories = data
+                else:
+                    custom_categories = data.get('categories', [])
                 logging.info(f"Loaded {len(custom_categories)} custom categories from JSON")
         
         return sessions, tech_stack, custom_categories
