@@ -8,60 +8,50 @@ Smart Tracker is a minimal personal learning tracker featuring a simplified work
 
 Preferred communication style: Simple, everyday language.
 
-## Recent Changes (October 5, 2025)
+## Recent Changes (October 8, 2025)
 
-### Studying vs Practice Tracking (20/80 Rule)
-- **Simplified Session Types**: Session type dropdown now only offers "Studying" or "Practice" to focus on learning vs doing
-- **Breakdown Calculation**: New helper function calculates studying/practice hours breakdown per technology
-- **Visual Indicators**: Shows 📚 for studying hours and 💪 for practice hours with percentages
-- **Dashboard Display**: Each technology card expands to show session type breakdown (Total, Studying %, Practice %)
-- **Tech Stack Integration**: Technology cards display studying/practice metrics with visual indicators
-- **Planning Roadmap**: Tables include studying/practice breakdown columns for each technology
-- **20/80 Monitoring**: Enables tracking if technologies maintain the recommended 20% studying, 80% practice ratio
+### 🎉 Smart Tracker v2.0 - Complete Platform Redesign
+Major architectural upgrade transitioning from JSON-based storage to SQLite database with enhanced hierarchical data model and comprehensive KPI dashboard system.
 
-### Category-Based Organization System (October 4, 2025)
-- **Unified Category System**: Technologies now organized by planning subsection categories (Front-End, Back-End, Core Libraries, Visualization, Machine Learning, Pipelines, Databases, Deployment, Excel, Automation, Security, Supporting Skills, Uncategorized)
-- **TECH_CATEGORIES Constant**: 13 predefined categories derived from planning blueprint structure
-- **Category-Based Tech Stack**: Displays technologies grouped by category with collapsible sections showing category subtotals (hours logged/goal hours/completion %)
-- **Category Selection**: When adding new technologies, users select which category it belongs to via dropdown
-- **Category Management**: Each tech card has settings expander allowing users to reassign technologies to different categories
-- **Auto-Migration**: Data model automatically migrates old "domain" field to "category" field on load
-- **Data Model**: Tech stack JSON now uses "category" field (domain field removed from new technologies)
+#### Database Migration & Infrastructure
+- **SQLite Database**: Migrated from JSON files to SQLite (`data/smart_tracker.db`) with 4-table schema (sessions, tech_stack, categories, dropdowns)
+- **Threading Fix**: Implemented `check_same_thread=False` for Streamlit multi-threaded compatibility
+- **Data Migration**: Successfully migrated existing data (5 sessions, 3 technologies, 13.2 hours) from JSON to SQLite
+- **Auto Backup**: Migration creates timestamped backups before conversion for data safety
 
-### Dynamic Planning Page
-- **Live Progress Tracking**: Planning page dynamically shows only categories where user has technologies
-- **Actual Hours Display**: Shows logged hours vs goal hours for each technology (e.g., "10.5 / 80 h")
-- **Real-Time Progress**: Displays completion percentage calculated from actual session hours
-- **Category Totals**: Automatic calculation of totals for each category showing logged/goal/progress
-- **Grand Total Summary**: Complete overview showing total logged hours, total goal hours, and overall completion percentage
-- **Smart Empty State**: Prompts users to add technologies if stack is empty
+#### Enhanced Session Model (13 Fields)
+- **Hierarchical Structure**: Category Name → Technology → Work Item → Skill/Topic cascade system
+- **New Fields**: session_id, session_date, category_name, technology, work_item, skill_topic, notes, tags, session_type, difficulty, status, hours_logged, date_added
+- **Session Types**: Integrated "Studying" and "Practice" tracking for 20/80 rule monitoring
+- **Smart Validation**: Hours (0-12), no future dates, required technology field
 
-### Data Integrity & Logging Implementation
-- **Input Validation**: Hours must be 0-12, no future dates, technology cannot be empty
-- **Activity Logging**: All CRUD operations logged to /logs/activity.log with timestamps
-- **Dynamic Technology Entry**: Text input with suggestions replaces fixed dropdown
-- **Auto-Add to Tech Stack**: New technologies automatically added to stack when sessions are saved
-- **Validation Feedback**: User-friendly error messages displayed on validation failure
-- **Audit Trail**: Complete logging of add, edit, delete operations plus validation failures
+#### New Page Architecture
+- **Home KPI Dashboard** (`home_kpi_dashboard.py`): Real-time metrics with Total Sessions, Total Hours, Technologies count, Overall Progress percentage
+- **Tech Stack CRUD** (`tech_stack_crud_page.py`): Dedicated technology management interface (removed from Home)
+- **Calculator** (`calculator_page.py`): Workload estimation with flexible unit conversion (hours/days/weeks/months) and scenario planning
+- **Dropdown Manager** (`dropdown_manager_page.py`): Centralized dropdown data management for cascading selectors with type-to-add functionality
 
-### Technology Object Model with Goal-Based Progress
-- **Tech Stack Objects**: Each technology is now a full object with name, category, goal_hours, and date_added
-- **Expanded Categories**: Seven category types - Language, Framework, Library, Tool, Database, Platform, Concept
-- **Goal Hours**: Set target hours when adding technologies to track progress toward mastery
-- **Auto-Progress Calculation**: Progress = (logged hours / goal hours) × 100 - fully automatic based on session hours
-- **Persistent Storage**: Tech stack saves to tech_stack.json with all properties
+#### Cascading Dropdown System
+- **4-Level Hierarchy**: Category Name (root) → Technology → Work Item → Skill/Topic (leaf)
+- **Auto-Population**: Child dropdowns populate based on parent selection
+- **Type-to-Add**: Create new dropdown options on-the-fly during session entry
+- **Centralized Management**: Single source of truth in dropdown_manager page
 
-### Dashboard Features
-- **Progress Bars**: Each technology card shows visual progress bar with "40/100 hrs (40%)" format
-- **Expandable Cards**: Cards show total hours, session count, last date - expand for full session details
-- **Full Session Details**: All session information displayed (date, topic, notes, tags, type, difficulty, status, hours)
-- **Inline Actions**: Edit and Delete buttons within expanded cards
-- **Auto-Update**: Cards refresh automatically when sessions are added, edited, or deleted
+#### UI/UX Improvements
+- **Professional Branding**: "SYSTEM DEV | Real-Time Operations Dashboard" subtitle on header
+- **Default Collapsed**: All sections start collapsed except Grand Total for cleaner interface
+- **Top-Load Behavior**: Critical metrics and controls always visible at page top
+- **Cross-Page Sync**: Database ensures data consistency across all pages automatically
 
-### UI Improvements
-- **Dashboard Renamed**: "Clean Dashboard" simplified to just "Dashboard"
-- **Demo Section Removed**: Cleaned up home page by removing system demo buttons
-- **Flexible Technology Input**: Type custom technologies or use suggestions from tech stack
+#### Navigation Structure
+New streamlined navigation with dedicated pages:
+1. 🏠 Home Dashboard (KPI metrics only)
+2. 📚 Sessions (view/manage)
+3. 📝 Log Session (create new)
+4. 🎯 Tech Stack CRUD (manage technologies)
+5. 📋 Planning (roadmap view)
+6. 🧮 Calculator (workload estimation)
+7. ⚙️ Dropdown Manager (data management)
 
 ## System Architecture
 
@@ -111,14 +101,19 @@ The application follows a layered architecture pattern with clear separation of 
 - **pytest**: Testing framework (structure prepared in `tests/` directory)
 
 ### Data Persistence & Management
-- **JSON Storage**: Learning sessions and tech stack configuration persist across sessions
-- **File-based Storage**: Data saved to `data/` directory (excluded from git)
-- **Automatic Backup**: Backup functionality available through storage module
-- **Session Recovery**: All data automatically loaded on app startup
+- **SQLite Database**: Primary storage in `data/smart_tracker.db` with 4-table relational schema
+- **Database Tables**: 
+  - `sessions`: Learning session records with 13 fields
+  - `tech_stack`: Technology inventory with goals and progress tracking
+  - `categories`: Category definitions with emojis and metadata
+  - `dropdowns`: Hierarchical dropdown options for cascading selectors
+- **Threading Support**: Configured with `check_same_thread=False` for Streamlit multi-threading
+- **Automatic Backup**: Migration utility creates timestamped JSON backups before database conversion
+- **Data Migration**: Built-in utility (`migrate_to_db.py`) converts legacy JSON data to SQLite
 
-### CRUD Operations
-- **Create**: Add new learning sessions via Smart Learning Tracker
-- **Read**: View sessions with filtering and sorting in Clean Dashboard
-- **Update**: Edit individual sessions with full-featured edit dialog
-- **Delete**: Remove individual sessions or clear all at once
-- **Export**: Download all sessions as CSV for external analysis
+### CRUD Operations (Database-Driven)
+- **Create**: Add sessions via Log Session page with cascading dropdowns and auto-save to database
+- **Read**: View sessions in Sessions page with real-time database queries
+- **Update**: Edit sessions/technologies through dedicated CRUD pages with instant database sync
+- **Delete**: Remove records with database cascade handling for referential integrity
+- **Export**: CSV export functionality for external analysis and reporting
