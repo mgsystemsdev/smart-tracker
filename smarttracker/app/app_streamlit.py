@@ -1739,6 +1739,15 @@ def main():
         initial_sidebar_state="expanded"
     )
     
+    # Hide default Streamlit page navigation
+    st.markdown("""
+        <style>
+            [data-testid="stSidebarNav"] {
+                display: none;
+            }
+        </style>
+    """, unsafe_allow_html=True)
+    
     # Initialize database (v2.0)
     if "db" not in st.session_state:
         from smarttracker.domain.db_storage import DatabaseStorage
