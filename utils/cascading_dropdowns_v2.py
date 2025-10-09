@@ -46,10 +46,13 @@ class DropdownManagerV2:
         
         # Get existing values from database
         if parent_field and parent_value:
+            # Filter by parent - show only matching values
             existing_values = self.db.get_dropdown_values(field_name, parent_field, parent_value)
         elif parent_field and not parent_value:
-            existing_values = self.db.get_dropdown_values(field_name, show_all=True)
+            # Parent required but not selected - show empty list (not all values)
+            existing_values = []
         else:
+            # Root field (no parent) - show all values
             existing_values = self.db.get_dropdown_values(field_name)
         
         # Display label
