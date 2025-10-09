@@ -295,18 +295,34 @@ class DatabaseStorage:
             logging.debug(f"Dropdown value already exists: {field_name} = {field_value}")
             return False
     
-    def get_dropdown_values(self, field_name: str, parent_field: Optional[str] = None, parent_value: Optional[str] = None) -> List[str]:
-        """Get dropdown values for a field, optionally filtered by parent."""
+    def get_dropdown_values(self, field_name: str, parent_field: Optional[str] = None, parent_value: Optional[str] = None, show_all: bool = False) -> List[str]:
+        """Get dropdown values for a field, optionally filtered by parent.
+        
+        Args:
+            field_name: The dropdown field to query
+            parent_field: Parent field name (for filtering)
+            parent_value: Parent value (for filtering)
+            show_all: If True, return ALL values for field regardless of parent relationships
+        """
         conn = self._get_connection()
         cursor = conn.cursor()
         
         if parent_field and parent_value:
+            # Filter by specific parent value
             cursor.execute('''
                 SELECT DISTINCT field_value FROM dropdowns
                 WHERE field_name = ? AND parent_field = ? AND parent_value = ?
                 ORDER BY field_value
             ''', (field_name, parent_field, parent_value))
+        elif show_all:
+            # Show ALL values for this field, including those with parent relationships
+            cursor.execute('''
+                SELECT DISTINCT field_value FROM dropdowns
+                WHERE field_name = ?
+                ORDER BY field_value
+            ''', (field_name,))
         else:
+            # Only root-level values (no parent)
             cursor.execute('''
                 SELECT DISTINCT field_value FROM dropdowns
                 WHERE field_name = ? AND (parent_field IS NULL OR parent_field = '')

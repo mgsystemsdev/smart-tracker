@@ -49,8 +49,8 @@ class DropdownManager:
             # Has parent and parent is selected - filter by parent
             existing_values = self.db.get_dropdown_values(field_name, parent_field, parent_value)
         elif parent_field and not parent_value:
-            # Has parent but parent is empty - show all values (for visibility)
-            existing_values = self.db.get_dropdown_values(field_name)
+            # Has parent but parent is empty - show ALL values (Excel-style)
+            existing_values = self.db.get_dropdown_values(field_name, show_all=True)
         else:
             # No parent (root level) - show all values
             existing_values = self.db.get_dropdown_values(field_name)

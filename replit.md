@@ -10,12 +10,16 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
-### October 9, 2025 - Architecture Simplification
+### October 9, 2025 - Architecture Simplification & Excel-Style Dropdowns
 **Beginner-Friendly Restructure**: Complete reorganization from nested smarttracker/app/ to flat, intuitive structure
 - **Page Extraction**: Moved all page functions from monolithic app.py (1365 lines) to dedicated modules in pages/ directory
 - **Clean Routing**: app.py reduced to 374 lines, now serves as lightweight router with page imports
 - **Legacy Cleanup**: Removed smarttracker/ folder, JSON files, backup folders, empty tests/ directory
-- **Documentation Update**: Updated replit.md to reflect new beginner-friendly architecture
+- **Excel-Style Dropdowns**: Implemented always-visible cascading dropdowns with inline write functionality
+  - All 4 hierarchical fields visible simultaneously (Category → Technology → Work Item → Skill/Topic)
+  - Smart filtering: Child dropdowns filter based on parent selection (like Excel data validation)
+  - Inline write: Type new values directly, auto-saves to database
+  - Helper tooltips when parent not selected
 - **Verified**: All 7 pages (Home, Sessions, Log Session, Tech Stack, Planning, Calculator, Dropdown Manager) working correctly
 
 ### October 8, 2025 - Smart Tracker v2.0 Platform Redesign
