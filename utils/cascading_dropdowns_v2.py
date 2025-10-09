@@ -59,16 +59,16 @@ class DropdownManagerV2:
         
         elif field_name == 'work_item':
             if parent_value:
-                # Read distinct work items from sessions table filtered by technology
-                existing_values = self.db.get_distinct_work_items_by_technology(parent_value)
+                # Read work items (hybrid: manual + auto-populated from sessions)
+                existing_values = self.db.get_work_items_by_technology(parent_value)
             else:
                 # No technology selected - show empty
                 existing_values = []
         
         elif field_name == 'skill_topic':
             if parent_value:
-                # Read distinct skills from sessions table filtered by work_item
-                existing_values = self.db.get_distinct_skills_by_work_item(parent_value)
+                # Read skills (hybrid: manual + auto-populated from sessions)
+                existing_values = self.db.get_skills_by_work_item(parent_value)
             else:
                 # No work item selected - show empty
                 existing_values = []
