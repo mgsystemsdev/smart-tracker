@@ -15,6 +15,7 @@ The application is built around a single Streamlit web interface with a wide lay
 -   **Modular Page Design**: Each page (`home_dashboard.py`, `log_session.py`, etc.) is a standalone module, making the application scalable and easy to navigate.
 -   **Database-First Approach**: All data persistence is handled via SQLite, migrating away from file-based storage to ensure data integrity and consistency.
 -   **Service Layer Architecture**: Business logic is encapsulated in dedicated services, such as `TechnologySyncService` and `CategorySyncService` for atomic data synchronization across tables, and `CachedQueryService` for optimizing read performance.
+-   **Direct Table Queries**: Cascading dropdowns read directly from source tables (categories, tech_stack, sessions) instead of using the dropdowns table, eliminating sync issues and ensuring single source of truth.
 -   **Performance Patterns**: Includes query batching, aggressive caching with manual invalidation on writes, and deferred saves for form submissions to enhance responsiveness and data consistency.
 -   **Hierarchical Data Model**: Employs a 4-level cascading dropdown system (Category → Technology → Work Item → Skill/Topic) for structured data entry and management.
 -   **UI/UX**: Features a professional "SYSTEM DEV | Real-Time Operations Dashboard" branding, with sections defaulting to collapsed for a cleaner interface and critical metrics always visible at the top.
