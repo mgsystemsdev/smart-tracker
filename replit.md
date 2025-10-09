@@ -37,6 +37,22 @@ Preferred communication style: Simple, everyday language.
   - Zero data drift between tech_stack and dropdowns tables
   - Referential integrity warnings prevent orphaned data
 
+### October 9, 2025 - Simplified Log Session Form (Dropdown/Text Separation)
+**User-Driven Improvement**: Redesigned Log Session form for cleaner, more intuitive data entry
+- **Structured Fields (Dropdown Only)**: Category, Technology, Work Item now use dropdown-only selection
+  - Removed text input boxes from these fields to eliminate confusion
+  - Users must select from existing options (managed via Dropdown Manager or Tech Stack CRUD)
+  - Cascading still works: child dropdowns filter based on parent selection
+- **Freeform Field (Text Only)**: Skill/Topic now uses text input only
+  - Removed dropdown for Skill/Topic (it's specific to each session)
+  - Pure text input for flexible, session-specific details
+- **Clearer Workflow**:
+  1. Select Category from dropdown
+  2. Select Technology from filtered dropdown
+  3. Select Work Item from filtered dropdown
+  4. Type Skill/Topic directly (freeform text)
+- **Benefits**: Less visual clutter, faster data entry, clear separation between structured hierarchy and freeform details
+
 ### October 9, 2025 - Architecture Simplification & Excel-Style Dropdowns
 **Beginner-Friendly Restructure**: Complete reorganization from nested smarttracker/app/ to flat, intuitive structure
 - **Page Extraction**: Moved all page functions from monolithic app.py (1365 lines) to dedicated modules in pages/ directory
@@ -45,7 +61,6 @@ Preferred communication style: Simple, everyday language.
 - **Excel-Style Dropdowns**: Implemented always-visible cascading dropdowns with inline write functionality
   - All 4 hierarchical fields visible simultaneously (Category → Technology → Work Item → Skill/Topic)
   - Smart filtering: Child dropdowns filter based on parent selection (like Excel data validation)
-  - Inline write: Type new values directly, auto-saves to database
   - Helper tooltips when parent not selected
 - **Dropdown Data Migration**: Populated dropdowns table with existing technologies from sessions
 - **Path Fixes**: Updated main.py to reference app.py instead of deleted smarttracker paths
