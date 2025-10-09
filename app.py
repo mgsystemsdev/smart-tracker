@@ -324,6 +324,10 @@ def main():
             st.session_state.current_page = "dropdown_manager"
             st.rerun()
         
+        if st.button("📊 Analytics", width="stretch"):
+            st.session_state.current_page = "analytics"
+            st.rerun()
+        
         st.markdown("---")
         
         # Professional info section
@@ -370,6 +374,9 @@ def main():
     elif st.session_state.current_page == "planning":
         from pages.planning import show_planning_page
         show_planning_page()
+    elif st.session_state.current_page == "analytics":
+        from pages.analytics import show_analytics_page
+        show_analytics_page()
 
 if __name__ == "__main__":
     main()
