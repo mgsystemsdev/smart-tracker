@@ -19,7 +19,7 @@ def show_calculator_page():
     
     # Back button
     if st.button("← Back to Home", help="Return to main page"):
-        st.session_state.current_page = "home"
+        st.session_state.current_page = "home_v2"
         st.rerun()
     
     # Initialize database

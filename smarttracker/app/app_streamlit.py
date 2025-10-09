@@ -239,7 +239,7 @@ def show_clean_dashboard():
     
     # Back button
     if st.button("← Back to Home", help="Return to main page"):
-        st.session_state.current_page = "home"
+        st.session_state.current_page = "home_v2"
         st.rerun()
     
     # Initialize learning sessions in session state
@@ -693,7 +693,7 @@ def show_tech_stack_page():
     
     # Back button
     if st.button("← Back to Home", help="Return to main page"):
-        st.session_state.current_page = "home"
+        st.session_state.current_page = "home_v2"
         st.rerun()
     
     # Initialize tech stack
@@ -895,7 +895,7 @@ def show_planning_page():
     
     # Back button
     if st.button("← Back to Home", help="Return to main page"):
-        st.session_state.current_page = "home"
+        st.session_state.current_page = "home_v2"
         st.rerun()
     
     st.markdown("---")
@@ -1015,7 +1015,7 @@ def show_learning_tracker():
     
     # Back button
     if st.button("← Back to Home"):
-        st.session_state.current_page = "home"
+        st.session_state.current_page = "home_v2"
         st.rerun()
     
     # Initialize learning sessions if not exists
@@ -1348,8 +1348,6 @@ def main():
         # Import and show Dropdown Manager page
         from smarttracker.app.pages.dropdown_manager_page import show_dropdown_manager_page
         show_dropdown_manager_page()
-    elif st.session_state.current_page == "home":
-        show_home_page()
     elif st.session_state.current_page == "clean_dashboard":
         show_clean_dashboard()
     elif st.session_state.current_page == "learning_tracker":
