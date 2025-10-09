@@ -1,11 +1,14 @@
 """
 Dropdown Manager Page - Centralized management of all dropdown data.
 Allows users to view, edit, and delete dropdown values across the system.
+Uses sync services to ensure data consistency across all tables.
 """
 
 import streamlit as st
 from utils.cascading_dropdowns import DropdownManager
 from database.operations import DatabaseStorage
+from services.sync_service import TechnologySyncService, CategorySyncService
+from services.cached_queries import CachedQueryService
 import logging
 
 def show_dropdown_manager_page():
@@ -24,11 +27,14 @@ def show_dropdown_manager_page():
         st.session_state.current_page = "home_v2"
         st.rerun()
     
-    # Initialize database and dropdown manager
+    # Initialize database and services
     if 'db' not in st.session_state:
         st.session_state.db = DatabaseStorage()
     
-    dropdown_manager = DropdownManager(st.session_state.db)
+    db = st.session_state.db
+    dropdown_manager = DropdownManager(db)
+    tech_service = TechnologySyncService(db)
+    category_service = CategorySyncService(db)
     
     st.markdown("---")
     
@@ -142,18 +148,52 @@ def show_dropdown_manager_page():
             
             if submitted:
                 if new_value and new_value.strip():
-                    # Add to database
-                    if st.session_state.db.add_dropdown_value(
-                        selected_field, 
-                        new_value.strip(),
-                        parent_field=parent_field if parent_field else None,
-                        parent_value=parent_value if parent_value else None
-                    ):
-                        st.success(f"✅ Added {new_value} to {all_fields[selected_field]}")
-                        logging.info(f"Manually added dropdown: {selected_field} = {new_value}")
-                        st.rerun()
+                    value = new_value.strip()
+                    
+                    # Use sync services for category_name and technology to ensure consistency
+                    if selected_field == 'category_name':
+                        # Add category using sync service
+                        result = category_service.add_category(value, is_custom=True)
+                        if result['success']:
+                            st.success(f"✅ {result['message']}")
+                            CachedQueryService.invalidate_cache()
+                            logging.info(f"Added category via Dropdown Manager: {value}")
+                            st.rerun()
+                        else:
+                            st.error(result['message'])
+                    
+                    elif selected_field == 'technology':
+                        # Add technology using sync service - requires parent category
+                        if parent_value:
+                            result = tech_service.add_technology(
+                                name=value,
+                                category=parent_value,
+                                goal_hours=50.0,  # Default goal
+                                date_added=None
+                            )
+                            if result['success']:
+                                st.success(f"✅ {result['message']}")
+                                CachedQueryService.invalidate_cache()
+                                logging.info(f"Added technology via Dropdown Manager: {value} in {parent_value}")
+                                st.rerun()
+                            else:
+                                st.error(result['message'])
+                        else:
+                            st.error("Please select a parent category")
+                    
                     else:
-                        st.error("Value already exists or failed to add")
+                        # For other fields (work_item, skill_topic, independent fields), use direct dropdown add
+                        if db.add_dropdown_value(
+                            selected_field, 
+                            value,
+                            parent_field=parent_field if parent_field else None,
+                            parent_value=parent_value if parent_value else None
+                        ):
+                            st.success(f"✅ Added {value} to {all_fields[selected_field]}")
+                            logging.info(f"Manually added dropdown: {selected_field} = {value}")
+                            st.rerun()
+                        else:
+                            st.error("Value already exists or failed to add")
                 else:
                     st.error("Please enter a value")
     
