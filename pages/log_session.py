@@ -6,7 +6,7 @@ Uses the new hierarchical dropdown system for data entry.
 import streamlit as st
 from datetime import date, datetime
 from database.operations import DatabaseStorage
-from utils.cascading_dropdowns import DropdownManager
+from utils.cascading_dropdowns_v2 import DropdownManagerV2
 import logging
 
 def show_log_session_page():
@@ -29,7 +29,7 @@ def show_log_session_page():
         st.session_state.db = DatabaseStorage()
     
     db = st.session_state.db
-    dropdown_manager = DropdownManager(db)
+    dropdown_manager = DropdownManagerV2(db)
     
     st.markdown("---")
     
@@ -83,7 +83,10 @@ def show_log_session_page():
             elif not selected_values.get('technology'):
                 st.error("⚠️ Technology is required")
             else:
-                # Create session data
+                # FIRST: Save all pending dropdown values (batch save)
+                dropdown_manager.save_pending_dropdowns(key_suffix="entry")
+                
+                # THEN: Create session data
                 session_data = {
                     'session_date': str(session_date),
                     'session_type': session_type,
@@ -99,7 +102,7 @@ def show_log_session_page():
                     'notes': notes
                 }
                 
-                # Save to database
+                # FINALLY: Save session to database
                 session_id = db.add_session(session_data)
                 
                 if session_id:
