@@ -131,6 +131,75 @@ class DropdownManagerV2:
                 st.info(f"No {field_config['label'].lower()} available. Add from parent dropdown.")
                 return ""
     
+    def render_simplified_form(self, key_suffix: str = "") -> Dict[str, str]:
+        """Render simplified form - ALL options shown, NO parent filtering.
+        Relationships are auto-paired in the background from database lookups.
+        """
+        
+        selected_values = {}
+        
+        # Technology - Show ALL technologies (no category filter)
+        st.markdown("**🔧 Technology**")
+        all_techs = [tech['name'] for tech in self.db.get_all_tech_stack()]
+        if all_techs:
+            technology = st.selectbox(
+                "technology_dropdown",
+                options=all_techs,
+                key=f"technology_simple_{key_suffix}",
+                label_visibility="collapsed",
+                help="Select the technology you worked on"
+            )
+            selected_values['technology'] = technology
+        else:
+            st.warning("⚠️ No technologies available. Add them in Dropdown Manager first.")
+            selected_values['technology'] = ''
+        
+        # Work Item - Show ALL work items (no technology filter) 
+        st.markdown("**📋 Work Item**")
+        all_work_items = []
+        # Get all work items from both manual + auto-populated
+        all_techs_list = [tech['name'] for tech in self.db.get_all_tech_stack()]
+        for tech in all_techs_list:
+            all_work_items.extend(self.db.get_work_items_by_technology(tech))
+        # Remove duplicates
+        all_work_items = sorted(list(set(all_work_items)))
+        
+        if all_work_items:
+            work_item = st.selectbox(
+                "work_item_dropdown",
+                options=[""] + all_work_items,  # Allow empty selection
+                key=f"work_item_simple_{key_suffix}",
+                label_visibility="collapsed",
+                help="Select a work item or leave empty"
+            )
+            selected_values['work_item'] = work_item if work_item else ''
+        else:
+            selected_values['work_item'] = ''
+        
+        # Skill/Topic - Freeform text input
+        st.markdown("**🎯 Skill / Topic**")
+        skill = st.text_input(
+            "skill_topic_input",
+            placeholder="Type the skill or topic you worked on...",
+            key=f"skill_topic_simple_{key_suffix}",
+            label_visibility="collapsed",
+            help="Enter any skill or topic - this is freeform text"
+        )
+        selected_values['skill_topic'] = skill.strip() if skill else ''
+        
+        # Auto-pair category in background (lookup from technology)
+        if selected_values['technology']:
+            # Find the category for this technology
+            tech_stack = self.db.get_all_tech_stack()
+            for tech in tech_stack:
+                if tech['name'] == selected_values['technology']:
+                    selected_values['category_name'] = tech.get('category', '')
+                    break
+        else:
+            selected_values['category_name'] = ''
+        
+        return selected_values
+    
     def render_hierarchical_form(self, key_suffix: str = "") -> Dict[str, str]:
         """Render complete hierarchical dropdown form with state-based clearing.
         

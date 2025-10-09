@@ -47,11 +47,11 @@ def show_log_session_page():
         with col2:
             session_type = dropdown_manager.render_independent_dropdown('session_type', key_suffix="entry")
         
-        # Hierarchical dropdowns
+        # Simplified dropdowns - NO parent filtering, auto-paired in background
         st.markdown("---")
         st.markdown("#### 🎯 Learning Details")
         
-        selected_values = dropdown_manager.render_hierarchical_form(key_suffix="entry")
+        selected_values = dropdown_manager.render_simplified_form(key_suffix="entry")
         
         # Independent context fields
         st.markdown("---")
