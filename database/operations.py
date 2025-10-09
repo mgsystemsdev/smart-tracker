@@ -90,6 +90,28 @@ class DatabaseStorage:
             )
         ''')
         
+        # Work items table - manually defined work items linked to technologies
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS work_items (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                technology TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(name, technology)
+            )
+        ''')
+        
+        # Skills table - manually defined skills linked to work items
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS skills (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                work_item TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(name, work_item)
+            )
+        ''')
+        
         # Create indexes for better query performance
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_sessions_date ON sessions(session_date)')
         cursor.execute('CREATE INDEX IF NOT EXISTS idx_sessions_tech ON sessions(technology)')
@@ -578,29 +600,145 @@ class DatabaseStorage:
         
         return [row[0] for row in cursor.fetchall()]
     
-    def get_distinct_work_items_by_technology(self, technology: str) -> List[str]:
-        """Get distinct work items for a specific technology from sessions table."""
+    def get_work_items_by_technology(self, technology: str) -> List[str]:
+        """Get work items for a technology - merges manual + auto-populated from sessions."""
         conn = self._get_connection()
         cursor = conn.cursor()
+        
+        # Get manually defined work items
+        cursor.execute('''
+            SELECT name FROM work_items
+            WHERE technology = ?
+            ORDER BY name
+        ''', (technology,))
+        manual_items = [row[0] for row in cursor.fetchall()]
+        
+        # Get auto-populated from sessions
         cursor.execute('''
             SELECT DISTINCT work_item FROM sessions
             WHERE technology = ? AND work_item IS NOT NULL AND work_item != ''
             ORDER BY work_item
         ''', (technology,))
+        auto_items = [row[0] for row in cursor.fetchall()]
         
-        return [row[0] for row in cursor.fetchall()]
+        # Merge and deduplicate
+        combined = list(set(manual_items + auto_items))
+        return sorted(combined)
     
-    def get_distinct_skills_by_work_item(self, work_item: str) -> List[str]:
-        """Get distinct skills/topics for a specific work item from sessions table."""
+    def get_skills_by_work_item(self, work_item: str) -> List[str]:
+        """Get skills for a work item - merges manual + auto-populated from sessions."""
         conn = self._get_connection()
         cursor = conn.cursor()
+        
+        # Get manually defined skills
+        cursor.execute('''
+            SELECT name FROM skills
+            WHERE work_item = ?
+            ORDER BY name
+        ''', (work_item,))
+        manual_skills = [row[0] for row in cursor.fetchall()]
+        
+        # Get auto-populated from sessions
         cursor.execute('''
             SELECT DISTINCT skill_topic FROM sessions
             WHERE work_item = ? AND skill_topic IS NOT NULL AND skill_topic != ''
             ORDER BY skill_topic
         ''', (work_item,))
+        auto_skills = [row[0] for row in cursor.fetchall()]
         
-        return [row[0] for row in cursor.fetchall()]
+        # Merge and deduplicate
+        combined = list(set(manual_skills + auto_skills))
+        return sorted(combined)
+    
+    # ==================== WORK ITEMS OPERATIONS ====================
+    
+    def add_work_item(self, name: str, technology: str) -> bool:
+        """Add a manually defined work item linked to a technology."""
+        try:
+            conn = self._get_connection()
+            cursor = conn.cursor()
+            cursor.execute('''
+                INSERT INTO work_items (name, technology)
+                VALUES (?, ?)
+            ''', (name, technology))
+            conn.commit()
+            logging.info(f"Added work item: {name} → {technology}")
+            return True
+        except sqlite3.IntegrityError:
+            logging.warning(f"Work item {name} already exists for {technology}")
+            return False
+    
+    def delete_work_item(self, name: str, technology: str) -> bool:
+        """Delete a manually defined work item."""
+        try:
+            conn = self._get_connection()
+            cursor = conn.cursor()
+            cursor.execute('''
+                DELETE FROM work_items
+                WHERE name = ? AND technology = ?
+            ''', (name, technology))
+            conn.commit()
+            logging.info(f"Deleted work item: {name} → {technology}")
+            return True
+        except Exception as e:
+            logging.error(f"Error deleting work item: {e}")
+            return False
+    
+    def get_all_work_items(self) -> List[Dict[str, str]]:
+        """Get all manually defined work items with their technologies."""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT name, technology FROM work_items
+            ORDER BY technology, name
+        ''')
+        
+        return [{'name': row[0], 'technology': row[1]} for row in cursor.fetchall()]
+    
+    # ==================== SKILLS OPERATIONS ====================
+    
+    def add_skill(self, name: str, work_item: str) -> bool:
+        """Add a manually defined skill linked to a work item."""
+        try:
+            conn = self._get_connection()
+            cursor = conn.cursor()
+            cursor.execute('''
+                INSERT INTO skills (name, work_item)
+                VALUES (?, ?)
+            ''', (name, work_item))
+            conn.commit()
+            logging.info(f"Added skill: {name} → {work_item}")
+            return True
+        except sqlite3.IntegrityError:
+            logging.warning(f"Skill {name} already exists for {work_item}")
+            return False
+    
+    def delete_skill(self, name: str, work_item: str) -> bool:
+        """Delete a manually defined skill."""
+        try:
+            conn = self._get_connection()
+            cursor = conn.cursor()
+            cursor.execute('''
+                DELETE FROM skills
+                WHERE name = ? AND work_item = ?
+            ''', (name, work_item))
+            conn.commit()
+            logging.info(f"Deleted skill: {name} → {work_item}")
+            return True
+        except Exception as e:
+            logging.error(f"Error deleting skill: {e}")
+            return False
+    
+    def get_all_skills(self) -> List[Dict[str, str]]:
+        """Get all manually defined skills with their work items."""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT name, work_item FROM skills
+            ORDER BY work_item, name
+        ''')
+        
+        return [{'name': row[0], 'work_item': row[1]} for row in cursor.fetchall()]
     
     def close(self):
         """Close database connection."""
