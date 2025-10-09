@@ -486,6 +486,59 @@ class DatabaseStorage:
         result = cursor.fetchone()[0]
         return result if result else 0.0
     
+    def count_sessions_by_technology(self, technology: str) -> int:
+        """Count sessions using a specific technology."""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT COUNT(*) FROM sessions WHERE technology = ?', (technology,))
+        return cursor.fetchone()[0]
+    
+    def count_sessions_by_category(self, category: str) -> int:
+        """Count sessions in a specific category."""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT COUNT(*) FROM sessions WHERE category_name = ?', (category,))
+        return cursor.fetchone()[0]
+    
+    def update_sessions_technology(self, old_name: str, new_name: str) -> bool:
+        """Update all sessions using old technology name to new name."""
+        try:
+            conn = self._get_connection()
+            cursor = conn.cursor()
+            cursor.execute('UPDATE sessions SET technology = ? WHERE technology = ?', (new_name, old_name))
+            conn.commit()
+            logging.info(f"Updated sessions: {old_name} -> {new_name}")
+            return True
+        except Exception as e:
+            logging.error(f"Error updating sessions technology: {e}")
+            return False
+    
+    def update_sessions_category(self, old_name: str, new_name: str) -> bool:
+        """Update all sessions with old category to new category."""
+        try:
+            conn = self._get_connection()
+            cursor = conn.cursor()
+            cursor.execute('UPDATE sessions SET category_name = ? WHERE category_name = ?', (new_name, old_name))
+            conn.commit()
+            logging.info(f"Updated sessions category: {old_name} -> {new_name}")
+            return True
+        except Exception as e:
+            logging.error(f"Error updating sessions category: {e}")
+            return False
+    
+    def update_tech_stack_category(self, old_category: str, new_category: str) -> bool:
+        """Update all tech stack entries with old category to new category."""
+        try:
+            conn = self._get_connection()
+            cursor = conn.cursor()
+            cursor.execute('UPDATE tech_stack SET category = ? WHERE category = ?', (new_category, old_category))
+            conn.commit()
+            logging.info(f"Updated tech_stack category: {old_category} -> {new_category}")
+            return True
+        except Exception as e:
+            logging.error(f"Error updating tech_stack category: {e}")
+            return False
+    
     def get_session_type_breakdown(self, technology: Optional[str] = None) -> Dict[str, float]:
         """Get studying vs practice hours breakdown."""
         conn = self._get_connection()
