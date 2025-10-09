@@ -1,0 +1,87 @@
+Thirteen columns, each with a clear role:
+4 hierarchical dependencies that define where and what you worked on.
+8 contextual/analytic fields that define how, when, and why you did it.
+1 structural field (Session ID) ensuring database integrity.
+Everything else—transient, redundant, or UI-specific—was intentionally pruned so the schema stays sustainable, expressive, and fast.
+#
+Column
+Description
+Dependency
+Purpose / Value
+1
+Session Date
+The exact date of the learning or work session.
+(Independent)
+Anchors all activity chronologically — drives streaks, time-based KPIs, and planning analytics.
+2
+Session Type
+Nature of the session: Practice, Study, Research, Planning, etc.
+(Independent)
+Defines session intent — feeds effort-type segmentation and planning metrics.
+3
+Category Name
+Conceptual domain (e.g., Main Language, Database, Backend, Frontend).
+Root Dependency
+Entry point of your personal hierarchy — organizes learning areas and drives Category-first dependency flow.
+4
+Technology
+Specific technology, framework, or language (e.g., Python, React, PostgreSQL).
+Depends on → Category Name
+Narrows work scope within a category — central to analytics and time allocation metrics.
+5
+Work Item
+The specific component, module, or unit of work (e.g., Variables, Joins, Components).
+Depends on → Technology
+Defines tangible tasks; filters Skill/Topic options; key for operational KPIs.
+6
+Skill / Topic
+The precise sub-skill or micro-concept (e.g., List Comprehension, Query Optimization).
+Depends on → Work Item
+Most granular learning unit — enables micro-KPI tracking and mastery depth analysis.
+7
+Category Source
+Where the work or learning originated (e.g., Coursera, Docs, YouTube, Project Repo).
+(Independent context field)
+Tracks effectiveness of content sources and learning ROI.
+8
+Difficulty
+Subjective difficulty rating (Beginner, Intermediate, Advanced).
+(Independent context field)
+Used for effort weighting and learning velocity analysis.
+9
+Status
+Current progress state (Planned, In Progress, Completed, Blocked).
+(Independent context field)
+Drives dashboards, workflow metrics, and completion KPIs.
+10
+Hours Spent
+Time invested in this session (e.g., 1.25 hours).
+(Independent context field)
+Quantitative metric powering the Page Calculator, Planning, and Time Efficiency analysis.
+11
+Tags
+Flexible labels (e.g., #backend, #refactor, #review).
+(Independent context field)
+Enables dynamic grouping, trend exploration, and AI-driven categorization.
+12
+Notes
+Open text for qualitative context — reflections, blockers, ideas.
+(Independent context field)
+Adds narrative context for retrospectives, learning logs, and qualitative analytics.
+13
+Session ID
+Unique identifier (UUID or auto-increment).
+(Independent)
+Ensures clean relational integrity for joins and future normalization.
+Category Name
+   ↓
+   Technology
+      ↓
+      Work Item
+         ↓
+         Skill / Topic
+
+​
+Root: Category Name — defines conceptual domain.
+Each lower field dynamically filters based on the one above.
+Dropdowns begin empty and self-populate with every new session entry, forming a personalized knowledge graph.

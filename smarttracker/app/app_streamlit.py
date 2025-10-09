@@ -1272,8 +1272,7 @@ def main():
     # Load tech stack from database
     if "tech_stack_loaded" not in st.session_state:
         tech_stack = st.session_state.db.get_all_tech_stack()
-        if tech_stack:
-            st.session_state.tech_stack = tech_stack
+        st.session_state.tech_stack = tech_stack if tech_stack else []
         st.session_state.tech_stack_loaded = True
     
     # Main header with MG branding
