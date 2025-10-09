@@ -36,7 +36,7 @@ class DropdownManagerV2:
         key_suffix: str = "",
         allow_new: bool = True
     ) -> str:
-        """Render cascading dropdown WITHOUT auto-save (fixes race condition)."""
+        """Render cascading dropdown reading directly from source tables."""
         
         if field_name not in self.hierarchy:
             return ""
@@ -44,16 +44,38 @@ class DropdownManagerV2:
         field_config = self.hierarchy[field_name]
         parent_field = field_config['parent']
         
-        # Get existing values from database
-        if parent_field and parent_value:
-            # Filter by parent - show only matching values
-            existing_values = self.db.get_dropdown_values(field_name, parent_field, parent_value)
-        elif parent_field and not parent_value:
-            # Parent required but not selected - show empty list (not all values)
-            existing_values = []
+        # Get existing values from source tables (not dropdowns table)
+        if field_name == 'category_name':
+            # Read from categories table
+            existing_values = self.db.get_all_categories()
+        
+        elif field_name == 'technology':
+            if parent_value:
+                # Read from tech_stack table filtered by category
+                existing_values = self.db.get_technologies_by_category(parent_value)
+            else:
+                # No category selected - show empty
+                existing_values = []
+        
+        elif field_name == 'work_item':
+            if parent_value:
+                # Read distinct work items from sessions table filtered by technology
+                existing_values = self.db.get_distinct_work_items_by_technology(parent_value)
+            else:
+                # No technology selected - show empty
+                existing_values = []
+        
+        elif field_name == 'skill_topic':
+            if parent_value:
+                # Read distinct skills from sessions table filtered by work_item
+                existing_values = self.db.get_distinct_skills_by_work_item(parent_value)
+            else:
+                # No work item selected - show empty
+                existing_values = []
+        
         else:
-            # Root field (no parent) - show all values
-            existing_values = self.db.get_dropdown_values(field_name)
+            # Fallback for any other fields
+            existing_values = []
         
         # Display label
         st.markdown(f"**{field_config['label']}**")
