@@ -6,6 +6,7 @@ Provides Create, Read, Update, Delete operations for the tech stack.
 import streamlit as st
 from datetime import datetime
 from database.operations import DatabaseStorage
+from services import TechnologySyncService, CategorySyncService, CachedQueryService
 import logging
 
 def show_tech_stack_crud_page():
@@ -24,11 +25,14 @@ def show_tech_stack_crud_page():
         st.session_state.current_page = "home_v2"
         st.rerun()
     
-    # Initialize database
+    # Initialize database and services
     if 'db' not in st.session_state:
         st.session_state.db = DatabaseStorage()
     
     db = st.session_state.db
+    tech_service = TechnologySyncService(db)
+    category_service = CategorySyncService(db)
+    cached = CachedQueryService(db)
     
     # Create three tabs for Add, Manage, and Categories
     tab1, tab2, tab3 = st.tabs(["➕ Add Technology", "📋 Manage Technologies", "📁 Manage Categories"])
@@ -53,36 +57,35 @@ def show_tech_stack_crud_page():
             
             if submitted:
                 if tech_name and tech_name.strip():
-                    tech_id = db.add_technology(
+                    # Use sync service to add to BOTH tech_stack and dropdowns
+                    result = tech_service.add_technology(
                         name=tech_name.strip(),
                         category=category,
                         goal_hours=goal_hours,
                         date_added=str(date_added)
                     )
                     
-                    if tech_id > 0:
-                        st.success(f"✅ Added {tech_name} to tech stack!")
-                        logging.info(f"Added technology: {tech_name} (ID: {tech_id})")
+                    if result['success']:
+                        st.success(f"✅ {result['message']}")
+                        CachedQueryService.invalidate_cache()  # Clear cache
                         st.rerun()
-                    elif tech_id == -1:
-                        st.error(f"❌ {tech_name} already exists in the stack")
                     else:
-                        st.error("Failed to add technology")
+                        st.error(f"❌ {result['message']}")
                 else:
                     st.error("Please enter a technology name")
     
     with tab2:
         st.markdown("### Current Tech Stack")
         
-        # Get all technologies
-        tech_stack = db.get_all_tech_stack()
+        # Get all technologies WITH metrics in ONE query (cached)
+        tech_stack = CachedQueryService.get_tech_stack_with_metrics(db)
         
         if not tech_stack:
             st.info("📚 No technologies in your stack yet. Add your first one!")
         else:
-            # Display summary
+            # Display summary (NO N+1 queries!)
             total_goal_hours = sum(tech.get('goal_hours', 0) for tech in tech_stack)
-            total_logged_hours = sum(db.get_hours_by_technology(tech['name']) for tech in tech_stack)
+            total_logged_hours = sum(tech.get('logged_hours', 0) for tech in tech_stack)
             
             col1, col2, col3 = st.columns(3)
             with col1:
@@ -110,8 +113,8 @@ def show_tech_stack_crud_page():
                         tech_name = tech['name']
                         goal_hours = tech.get('goal_hours', 50)
                         date_added = tech.get('date_added', 'Unknown')
-                        logged_hours = db.get_hours_by_technology(tech_name)
-                        progress_pct = (logged_hours / goal_hours * 100) if goal_hours > 0 else 0
+                        logged_hours = tech.get('logged_hours', 0)  # Already fetched!
+                        progress_pct = tech.get('progress_pct', 0)  # Already calculated!
                         
                         # Technology card
                         with st.container():
@@ -160,13 +163,22 @@ def show_tech_stack_crud_page():
                                     col_save, col_cancel = st.columns(2)
                                     with col_save:
                                         if st.form_submit_button("💾 Save Changes", use_container_width=True):
-                                            if db.update_technology(tech_id, name=edit_name, category=edit_category, goal_hours=edit_goal):
-                                                st.success(f"✅ Updated {edit_name}")
+                                            # Use sync service to update everywhere
+                                            result = tech_service.update_technology(
+                                                tech_id, 
+                                                name=edit_name, 
+                                                category=edit_category, 
+                                                goal_hours=edit_goal
+                                            )
+                                            
+                                            if result['success']:
+                                                st.success(f"✅ {result['message']}")
                                                 logging.info(f"Updated technology ID {tech_id}: {edit_name}")
+                                                CachedQueryService.invalidate_cache()
                                                 st.session_state.editing_tech = None
                                                 st.rerun()
                                             else:
-                                                st.error("Failed to update")
+                                                st.error(f"❌ {result['message']}")
                                     
                                     with col_cancel:
                                         if st.form_submit_button("❌ Cancel", use_container_width=True):
@@ -175,18 +187,44 @@ def show_tech_stack_crud_page():
                             
                             # Delete confirmation
                             if st.session_state.get('deleting_tech') == tech_id:
-                                st.warning(f"⚠️ Are you sure you want to delete **{tech_name}**? This action cannot be undone!")
-                                col_confirm, col_cancel_del = st.columns(2)
+                                # Use sync service with safety checks
+                                result = tech_service.delete_technology(tech_id)
                                 
-                                with col_confirm:
-                                    if st.button("✅ Yes, Delete", key=f"confirm_del_{tech_id}", use_container_width=True, type="primary"):
-                                        if db.delete_technology(tech_id):
-                                            st.success(f"🗑️ Deleted {tech_name}")
-                                            logging.info(f"Deleted technology ID {tech_id}: {tech_name}")
+                                if result.get('requires_confirmation'):
+                                    st.warning(f"⚠️ {result['message']}")
+                                    st.info("💡 Choose: Delete anyway (marks sessions as [Deleted]) or Cancel")
+                                    
+                                    col_force, col_cancel_del = st.columns(2)
+                                    
+                                    with col_force:
+                                        if st.button("🗑️ Delete Anyway", key=f"force_del_{tech_id}", use_container_width=True, type="primary"):
+                                            force_result = tech_service.force_delete_technology(tech_id)
+                                            if force_result['success']:
+                                                st.success(f"✅ {force_result['message']}")
+                                                CachedQueryService.invalidate_cache()
+                                                st.session_state.deleting_tech = None
+                                                st.rerun()
+                                            else:
+                                                st.error(f"❌ {force_result['message']}")
+                                    
+                                    with col_cancel_del:
+                                        if st.button("❌ Cancel", key=f"cancel_force_{tech_id}", use_container_width=True):
                                             st.session_state.deleting_tech = None
                                             st.rerun()
-                                        else:
-                                            st.error("Failed to delete")
+                                else:
+                                    st.warning(f"⚠️ Delete {tech_name}?")
+                                    col_confirm, col_cancel_del = st.columns(2)
+                                    
+                                    with col_confirm:
+                                        if st.button("✅ Yes, Delete", key=f"confirm_del_{tech_id}", use_container_width=True, type="primary"):
+                                            if result['success']:
+                                                st.success(f"🗑️ {result['message']}")
+                                                logging.info(f"Deleted technology ID {tech_id}: {tech_name}")
+                                                CachedQueryService.invalidate_cache()
+                                                st.session_state.deleting_tech = None
+                                                st.rerun()
+                                            else:
+                                                st.error(f"❌ {result['message']}")
                                 
                                 with col_cancel_del:
                                     if st.button("❌ Cancel", key=f"cancel_del_{tech_id}", use_container_width=True):
@@ -206,11 +244,14 @@ def show_tech_stack_crud_page():
             
             if submitted_cat:
                 if new_category and new_category.strip():
-                    if db.add_category(new_category.strip(), is_custom=True):
-                        st.success(f"✅ Added category: {new_category}")
+                    # Use sync service to add to BOTH categories and dropdowns
+                    result = category_service.add_category(new_category.strip(), is_custom=True)
+                    if result['success']:
+                        st.success(f"✅ {result['message']}")
+                        CachedQueryService.invalidate_cache()
                         st.rerun()
                     else:
-                        st.error(f"❌ Category '{new_category}' already exists")
+                        st.error(f"❌ {result['message']}")
                 else:
                     st.error("Please enter a category name")
         
@@ -259,12 +300,15 @@ def show_tech_stack_crud_page():
                             with col_save:
                                 if st.form_submit_button("💾 Save", use_container_width=True):
                                     if new_cat_name and new_cat_name.strip():
-                                        if db.rename_category(cat, new_cat_name.strip()):
-                                            st.success(f"✅ Renamed to '{new_cat_name}'")
+                                        # Use sync service to rename everywhere
+                                        result = category_service.rename_category(cat, new_cat_name.strip())
+                                        if result['success']:
+                                            st.success(f"✅ {result['message']}")
+                                            CachedQueryService.invalidate_cache()
                                             st.session_state.renaming_category = None
                                             st.rerun()
                                         else:
-                                            st.error("Category name already exists or invalid")
+                                            st.error(f"❌ {result['message']}")
                                     else:
                                         st.error("Please enter a valid name")
                             
@@ -282,12 +326,15 @@ def show_tech_stack_crud_page():
                         col_confirm, col_cancel = st.columns(2)
                         with col_confirm:
                             if st.button("🗑️ Yes, Delete", key=f"confirm_del_cat_{cat}", use_container_width=True, type="primary"):
-                                if db.delete_category(cat):
-                                    st.success(f"✅ Deleted category '{cat}'")
+                                # Use sync service to delete everywhere
+                                result = category_service.delete_category(cat)
+                                if result['success']:
+                                    st.success(f"✅ {result['message']}")
+                                    CachedQueryService.invalidate_cache()
                                     st.session_state.deleting_category = None
                                     st.rerun()
                                 else:
-                                    st.error("Failed to delete category")
+                                    st.error(f"❌ {result['message']}")
                         
                         with col_cancel:
                             if st.button("❌ Cancel", key=f"cancel_del_cat_{cat}", use_container_width=True):

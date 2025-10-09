@@ -58,10 +58,12 @@ class CachedQueryService:
     
     @staticmethod
     @st.cache_data(ttl=60, show_spinner=False)
-    def get_dropdown_values_cached(_db: DatabaseStorage, field_name: str, parent_field: str = None, 
-                                   parent_value: str = None, show_all: bool = False) -> List[str]:
+    def get_dropdown_values_cached(_db: DatabaseStorage, field_name: str, parent_field: str = "", 
+                                   parent_value: str = "", show_all: bool = False) -> List[str]:
         """Cached dropdown values query."""
-        return _db.get_dropdown_values(field_name, parent_field, parent_value, show_all)
+        p_field = parent_field if parent_field else None
+        p_value = parent_value if parent_value else None
+        return _db.get_dropdown_values(field_name, p_field, p_value, show_all)
     
     @staticmethod
     @st.cache_data(ttl=60, show_spinner=False)
