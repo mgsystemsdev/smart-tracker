@@ -28,7 +28,12 @@ The application is built around a single Streamlit web interface with a wide lay
     - `skills` table stores manually defined skills linked to work items (TEXT references)
     - Dropdown queries merge manual entries + auto-populated from sessions, de-duplicated
     - Note: Uses TEXT references instead of integer FKs to maintain consistency with sessions table structure
--   **Cascading Dropdowns**: Fixed dropdown dependency filtering - child dropdowns now show empty options (not all) when parent is unselected, ensuring proper hierarchical filtering.
+-   **Simplified Session Entry**: Session entry uses a simplified form where all options are shown without parent-child filtering:
+    - Technology dropdown shows ALL technologies (no category selection required)
+    - Work Item dropdown shows ALL work items (no technology selection required)
+    - Background auto-pairing: Category is automatically looked up from selected technology
+    - Relationships preserved for analytics: Data properly grouped by category despite simplified entry
+    - Dropdown Manager still uses hierarchical filtering for data management
 -   **KPI Dashboard**: Provides real-time metrics including total sessions, hours, technology count, and overall progress.
 -   **Analytics Dashboard**: Advanced performance dashboard with hierarchical data breakdowns:
     - Categories Analytics: Time distribution and technology breakdown per category
