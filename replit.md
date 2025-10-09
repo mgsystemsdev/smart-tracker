@@ -20,12 +20,18 @@ The application is built around a single Streamlit web interface with a wide lay
 **Core Features & Implementations:**
 -   **Database Schema**: Comprises `sessions`, `tech_stack`, `categories`, and `dropdowns` tables.
 -   **Enhanced Session Model**: Sessions include 13 fields with hierarchical categories, work items, and skill topics, supporting tracking of "Studying" and "Practice" session types.
+-   **Cascading Dropdowns**: Fixed dropdown dependency filtering - child dropdowns now show empty options (not all) when parent is unselected, ensuring proper hierarchical filtering.
 -   **KPI Dashboard**: Provides real-time metrics including total sessions, hours, technology count, and overall progress.
 -   **Analytics Dashboard**: Advanced performance dashboard with hierarchical data breakdowns:
     - Categories Analytics: Time distribution and technology breakdown per category
     - Technologies Analytics: Work item distribution and hours per technology
     - Work Items Analytics: Skill breakdown and session type split per work item
--   **CRUD Interfaces**: Dedicated pages for managing technologies (`Tech Stack CRUD`) and dropdown options (`Dropdown Manager`), alongside session logging and viewing.
+-   **Dropdown Manager**: Consolidated data management hub with 4 tabs:
+    - Manage Categories: Add, rename, delete, merge categories
+    - Manage Technologies: Add, edit, delete technologies with category assignment
+    - Manage Dropdowns: Work items and other dropdown values
+    - Statistics: Overview of all data
+-   **Tech Stack Dashboard**: Visual-only dashboard displaying technology cards with KPIs, progress metrics, and category grouping. Read-only interface for viewing learning progress.
 -   **Workload Calculator**: A dedicated page for estimating workload with flexible unit conversions.
 -   **Data Consistency**: Unified sync services ensure referential integrity and propagate changes across all related tables, eliminating data drift.
 
