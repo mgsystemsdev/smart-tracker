@@ -55,37 +55,43 @@ New streamlined navigation with dedicated pages:
 
 ## System Architecture
 
-### Package Structure
-The application follows a layered architecture pattern with clear separation of concerns:
+### Beginner-Friendly Folder Structure
+The application uses a simple, flat structure that's easy to understand:
 
-- **Domain Layer** (`smarttracker/domain/`): Reserved for core business logic, models, and domain services
-- **Application Layer** (`smarttracker/app/`): Contains user interface implementations
-- **CLI Interface** (`smarttracker/cli.py`): Command-line interface using Typer framework
-- **Entry Point** (`main.py`): Unified entry point that routes to appropriate interface
+```
+smart-tracker/
+├── app.py                    # Main Streamlit application
+├── main.py                   # Entry point (workflow runner)
+├── database/
+│   └── operations.py         # All database operations
+├── pages/
+│   ├── home_dashboard.py     # KPI dashboard
+│   ├── sessions.py           # View/edit sessions
+│   ├── log_session.py        # Create new session
+│   ├── tech_stack.py         # Tech stack management
+│   ├── planning.py           # Planning & roadmap
+│   ├── calculator.py         # Workload calculator
+│   └── dropdown_manager.py   # Dropdown data manager
+├── utils/
+│   └── cascading_dropdowns.py # Hierarchical dropdown logic
+├── data/                     # SQLite database
+└── logs/                     # Application logs
+```
 
 ### Interface Architecture
-**Dual Interface Design**: The application supports two distinct user interaction modes:
-- **Web Interface**: Streamlit-based web application for visual interaction
-- **CLI Interface**: Typer-based command-line tools for programmatic access
-
-**Unified Entry Point**: Single `main.py` file that intelligently routes to either the Streamlit web app or CLI based on command-line arguments.
-
-### Frontend Architecture
-**Streamlit Web Application**: 
-- Configured for wide layout with expandable sidebar
+**Single Streamlit Interface**: The application is a web-based Streamlit app with:
+- Wide layout with expandable sidebar
 - Port 5000 binding with external accessibility (0.0.0.0)
-- Multi-column responsive layout design
-- Version information display in sidebar
-
-**CLI Framework**:
-- Typer-based with built-in help system and version callbacks
-- Structured for easy command extension
-- Tab completion support disabled for simplicity
+- Multi-page navigation system
+- MG System Dev branding with golden yellow accents
 
 ### Design Patterns
-**Modular Package Design**: Clean separation allows for independent development of domain logic and user interfaces. The scaffold structure supports rapid extension without architectural refactoring.
+**Modular Page Design**: Each page is a separate Python file with a single function that renders that page. This makes it easy to:
+- Find and edit specific features
+- Understand what each page does
+- Add new pages without touching existing code
 
-**Framework Abstraction**: Business logic remains independent of UI frameworks, enabling future interface additions without core changes.
+**Database-First Approach**: All data operations go through the `DatabaseStorage` class in `database/operations.py`. No JSON files, no legacy storage - just clean SQLite operations.
 
 ## External Dependencies
 
