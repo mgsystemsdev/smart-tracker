@@ -165,11 +165,12 @@ def show_dropdown_manager_page():
                     elif selected_field == 'technology':
                         # Add technology using sync service - requires parent category
                         if parent_value:
+                            from datetime import date
                             result = tech_service.add_technology(
                                 name=value,
                                 category=parent_value,
                                 goal_hours=50.0,  # Default goal
-                                date_added=None
+                                date_added=str(date.today())
                             )
                             if result['success']:
                                 st.success(f"✅ {result['message']}")
