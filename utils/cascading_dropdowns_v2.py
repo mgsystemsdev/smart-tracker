@@ -107,7 +107,12 @@ class DropdownManagerV2:
                 return ""
     
     def render_hierarchical_form(self, key_suffix: str = "") -> Dict[str, str]:
-        """Render complete hierarchical dropdown form with state-based clearing."""
+        """Render complete hierarchical dropdown form with state-based clearing.
+        
+        Updated design:
+        - Category, Technology, Work Item: Dropdown only (no text input)
+        - Skill/Topic: Text input only (no dropdown)
+        """
         
         selected_values = {}
         state_key = f"dropdown_state_{key_suffix}"
@@ -123,8 +128,8 @@ class DropdownManagerV2:
         
         prev_state = st.session_state[state_key].copy()
         
-        # Category Name (root) - Always visible
-        category = self.render_cascading_dropdown('category_name', key_suffix=key_suffix)
+        # Category Name (root) - Dropdown only (no text input for new values)
+        category = self.render_cascading_dropdown('category_name', key_suffix=key_suffix, allow_new=False)
         selected_values['category_name'] = category
         
         # Clear children if category changed
@@ -133,8 +138,8 @@ class DropdownManagerV2:
             st.session_state[state_key]['work_item'] = ''
             st.session_state[state_key]['skill_topic'] = ''
         
-        # Technology (depends on Category) - Always visible, filtered by category
-        technology = self.render_cascading_dropdown('technology', parent_value=category if category else None, key_suffix=key_suffix)
+        # Technology (depends on Category) - Dropdown only (no text input for new values)
+        technology = self.render_cascading_dropdown('technology', parent_value=category if category else None, key_suffix=key_suffix, allow_new=False)
         selected_values['technology'] = technology
         
         # Clear children if technology changed
@@ -142,17 +147,24 @@ class DropdownManagerV2:
             st.session_state[state_key]['work_item'] = ''
             st.session_state[state_key]['skill_topic'] = ''
         
-        # Work Item (depends on Technology) - Always visible, filtered by technology
-        work_item = self.render_cascading_dropdown('work_item', parent_value=technology if technology else None, key_suffix=key_suffix)
+        # Work Item (depends on Technology) - Dropdown only (no text input for new values)
+        work_item = self.render_cascading_dropdown('work_item', parent_value=technology if technology else None, key_suffix=key_suffix, allow_new=False)
         selected_values['work_item'] = work_item
         
         # Clear children if work_item changed
         if work_item != prev_state['work_item']:
             st.session_state[state_key]['skill_topic'] = ''
         
-        # Skill/Topic (depends on Work Item) - Always visible, filtered by work item
-        skill = self.render_cascading_dropdown('skill_topic', parent_value=work_item if work_item else None, key_suffix=key_suffix)
-        selected_values['skill_topic'] = skill
+        # Skill/Topic (freeform text input - no dropdown)
+        st.markdown("**🎯 Skill / Topic**")
+        skill = st.text_input(
+            "skill_topic_input",
+            placeholder="Type the skill or topic you worked on...",
+            key=f"skill_topic_text_{key_suffix}",
+            label_visibility="collapsed",
+            help="Enter any skill or topic - this is freeform text"
+        )
+        selected_values['skill_topic'] = skill.strip() if skill else ''
         
         # Update state
         st.session_state[state_key] = selected_values.copy()
