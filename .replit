@@ -4,6 +4,7 @@ expertMode = true
 
 [nix]
 channel = "stable-25_05"
+packages = ["glibcLocales"]
 
 [workflows]
 runButton = "Project"
@@ -40,10 +41,6 @@ externalPort = 3000
 [[ports]]
 localPort = 45803
 externalPort = 3001
-
-[[ports]]
-localPort = 46075
-externalPort = 3002
 
 [deployment]
 deploymentTarget = "cloudrun"
