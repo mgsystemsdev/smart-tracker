@@ -354,15 +354,95 @@ class DatabaseStorage:
         
         return [row[0] for row in cursor.fetchall()]
     
-    def delete_category(self, category_name: str) -> bool:
-        """Delete a category."""
+    def get_custom_categories(self) -> List[str]:
+        """Get only custom category names."""
         conn = self._get_connection()
         cursor = conn.cursor()
-        cursor.execute('DELETE FROM categories WHERE category_name = ?', (category_name,))
-        conn.commit()
+        cursor.execute('SELECT category_name FROM categories WHERE is_custom = 1 ORDER BY category_name')
         
-        logging.info(f"Deleted category: {category_name}")
-        return cursor.rowcount > 0
+        return [row[0] for row in cursor.fetchall()]
+    
+    def delete_category(self, category_name: str, move_to_category: str = "❓ Uncategorized") -> bool:
+        """Delete a category and move technologies to another category."""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        
+        try:
+            # Move all technologies from this category to the target category
+            cursor.execute('''
+                UPDATE tech_stack 
+                SET category = ? 
+                WHERE category = ?
+            ''', (move_to_category, category_name))
+            
+            # Delete the category
+            cursor.execute('DELETE FROM categories WHERE category_name = ?', (category_name,))
+            conn.commit()
+            
+            logging.info(f"Deleted category: {category_name}, moved techs to {move_to_category}")
+            return True
+        except Exception as e:
+            logging.error(f"Failed to delete category {category_name}: {e}")
+            conn.rollback()
+            return False
+    
+    def rename_category(self, old_name: str, new_name: str) -> bool:
+        """Rename a category and update all references."""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        
+        try:
+            # Check if new name already exists
+            cursor.execute('SELECT COUNT(*) FROM categories WHERE category_name = ?', (new_name,))
+            if cursor.fetchone()[0] > 0:
+                logging.warning(f"Category {new_name} already exists")
+                return False
+            
+            # Update category name
+            cursor.execute('''
+                UPDATE categories 
+                SET category_name = ? 
+                WHERE category_name = ?
+            ''', (new_name, old_name))
+            
+            # Update all technologies with this category
+            cursor.execute('''
+                UPDATE tech_stack 
+                SET category = ? 
+                WHERE category = ?
+            ''', (new_name, old_name))
+            
+            conn.commit()
+            logging.info(f"Renamed category from {old_name} to {new_name}")
+            return True
+        except Exception as e:
+            logging.error(f"Failed to rename category {old_name}: {e}")
+            conn.rollback()
+            return False
+    
+    def merge_categories(self, source_category: str, target_category: str) -> bool:
+        """Merge source category into target category."""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        
+        try:
+            # Move all technologies from source to target
+            cursor.execute('''
+                UPDATE tech_stack 
+                SET category = ? 
+                WHERE category = ?
+            ''', (target_category, source_category))
+            
+            # Delete the source category
+            cursor.execute('DELETE FROM categories WHERE category_name = ?', (source_category,))
+            conn.commit()
+            
+            logging.info(f"Merged category {source_category} into {target_category}")
+            return True
+        except Exception as e:
+            logging.error(f"Failed to merge categories: {e}")
+            conn.rollback()
+            return False
     
     # ==================== ANALYTICS & KPI OPERATIONS ====================
     
