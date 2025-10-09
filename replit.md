@@ -21,8 +21,13 @@ The application is built around a single Streamlit web interface with a wide lay
 -   **UI/UX**: Features a professional "SYSTEM DEV | Real-Time Operations Dashboard" branding, with sections defaulting to collapsed for a cleaner interface and critical metrics always visible at the top.
 
 **Core Features & Implementations:**
--   **Database Schema**: Comprises `sessions`, `tech_stack`, `categories`, and `dropdowns` tables.
+-   **Database Schema**: Comprises `sessions`, `tech_stack`, `categories`, `dropdowns`, `work_items`, and `skills` tables.
 -   **Enhanced Session Model**: Sessions include 13 fields with hierarchical categories, work items, and skill topics, supporting tracking of "Studying" and "Practice" session types.
+-   **Hybrid Dropdown System**: Work items and skills support both manual pre-definition and auto-population from sessions:
+    - `work_items` table stores manually defined work items linked to technologies (TEXT references)
+    - `skills` table stores manually defined skills linked to work items (TEXT references)
+    - Dropdown queries merge manual entries + auto-populated from sessions, de-duplicated
+    - Note: Uses TEXT references instead of integer FKs to maintain consistency with sessions table structure
 -   **Cascading Dropdowns**: Fixed dropdown dependency filtering - child dropdowns now show empty options (not all) when parent is unselected, ensuring proper hierarchical filtering.
 -   **KPI Dashboard**: Provides real-time metrics including total sessions, hours, technology count, and overall progress.
 -   **Analytics Dashboard**: Advanced performance dashboard with hierarchical data breakdowns:
@@ -32,7 +37,7 @@ The application is built around a single Streamlit web interface with a wide lay
 -   **Dropdown Manager**: Consolidated data management hub with 4 tabs:
     - Manage Categories: Add, rename, delete, merge categories
     - Manage Technologies: Add, edit, delete technologies with category assignment
-    - Manage Dropdowns: Work items and other dropdown values
+    - Manage Dropdowns: Add work items (linked to technologies) and skills (linked to work items) with proper parent selection
     - Statistics: Overview of all data
 -   **Tech Stack Dashboard**: Visual-only dashboard displaying technology cards with KPIs, progress metrics, and category grouping. Read-only interface for viewing learning progress.
 -   **Workload Calculator**: A dedicated page for estimating workload with flexible unit conversions.
