@@ -209,3 +209,163 @@ class CachedQueryService:
         ''')
         
         return {row[0]: row[1] for row in cursor.fetchall()}
+    
+    @staticmethod
+    @st.cache_data(ttl=60, show_spinner=False)
+    def get_category_analytics(_db: DatabaseStorage) -> List[Dict[str, Any]]:
+        """Get category analytics with technology breakdown."""
+        conn = _db._get_connection()
+        cursor = conn.cursor()
+        
+        # Get category totals with technology breakdown
+        cursor.execute('''
+            SELECT 
+                s.category_name,
+                s.technology,
+                SUM(s.hours_spent) as hours,
+                COUNT(s.session_id) as sessions
+            FROM sessions s
+            WHERE s.category_name != ''
+            GROUP BY s.category_name, s.technology
+            ORDER BY s.category_name, hours DESC
+        ''')
+        
+        # Organize by category
+        category_data = {}
+        for row in cursor.fetchall():
+            cat_name = row[0]
+            tech_name = row[1]
+            hours = row[2]
+            sessions = row[3]
+            
+            if cat_name not in category_data:
+                category_data[cat_name] = {
+                    'category': cat_name,
+                    'total_hours': 0,
+                    'total_sessions': 0,
+                    'technologies': []
+                }
+            
+            category_data[cat_name]['total_hours'] += hours
+            category_data[cat_name]['total_sessions'] += sessions
+            category_data[cat_name]['technologies'].append({
+                'name': tech_name,
+                'hours': hours,
+                'sessions': sessions
+            })
+        
+        return list(category_data.values())
+    
+    @staticmethod
+    @st.cache_data(ttl=60, show_spinner=False)
+    def get_technology_analytics(_db: DatabaseStorage) -> List[Dict[str, Any]]:
+        """Get technology analytics with work item breakdown."""
+        conn = _db._get_connection()
+        cursor = conn.cursor()
+        
+        # Get technology totals with work item breakdown
+        cursor.execute('''
+            SELECT 
+                s.technology,
+                s.category_name,
+                s.work_item,
+                SUM(s.hours_spent) as hours,
+                COUNT(s.session_id) as sessions
+            FROM sessions s
+            WHERE s.technology != ''
+            GROUP BY s.technology, s.category_name, s.work_item
+            ORDER BY s.technology, hours DESC
+        ''')
+        
+        # Organize by technology
+        tech_data = {}
+        for row in cursor.fetchall():
+            tech_name = row[0]
+            cat_name = row[1]
+            work_item = row[2] if row[2] else 'General Practice'
+            hours = row[3]
+            sessions = row[4]
+            
+            if tech_name not in tech_data:
+                tech_data[tech_name] = {
+                    'technology': tech_name,
+                    'category': cat_name,
+                    'total_hours': 0,
+                    'total_sessions': 0,
+                    'work_items': []
+                }
+            
+            tech_data[tech_name]['total_hours'] += hours
+            tech_data[tech_name]['total_sessions'] += sessions
+            tech_data[tech_name]['work_items'].append({
+                'name': work_item,
+                'hours': hours,
+                'sessions': sessions
+            })
+        
+        return list(tech_data.values())
+    
+    @staticmethod
+    @st.cache_data(ttl=60, show_spinner=False)
+    def get_work_item_analytics(_db: DatabaseStorage) -> List[Dict[str, Any]]:
+        """Get work item analytics with skill breakdown."""
+        conn = _db._get_connection()
+        cursor = conn.cursor()
+        
+        # Get work item totals with skill breakdown
+        cursor.execute('''
+            SELECT 
+                s.work_item,
+                s.technology,
+                s.skill_topic,
+                s.session_type,
+                SUM(s.hours_spent) as hours,
+                COUNT(s.session_id) as sessions
+            FROM sessions s
+            WHERE s.work_item != '' AND s.work_item IS NOT NULL
+            GROUP BY s.work_item, s.technology, s.skill_topic, s.session_type
+            ORDER BY s.work_item, hours DESC
+        ''')
+        
+        # Organize by work item
+        work_item_data = {}
+        for row in cursor.fetchall():
+            work_item = row[0]
+            tech_name = row[1]
+            skill = row[2] if row[2] else 'General'
+            session_type = row[3]
+            hours = row[4]
+            sessions = row[5]
+            
+            if work_item not in work_item_data:
+                work_item_data[work_item] = {
+                    'work_item': work_item,
+                    'technology': tech_name,
+                    'total_hours': 0,
+                    'total_sessions': 0,
+                    'studying_hours': 0,
+                    'practice_hours': 0,
+                    'skills': []
+                }
+            
+            work_item_data[work_item]['total_hours'] += hours
+            work_item_data[work_item]['total_sessions'] += sessions
+            
+            if session_type == 'Studying':
+                work_item_data[work_item]['studying_hours'] += hours
+            elif session_type == 'Practice':
+                work_item_data[work_item]['practice_hours'] += hours
+            
+            # Add skill if not already there
+            existing_skill = next((s for s in work_item_data[work_item]['skills'] if s['name'] == skill), None)
+            if existing_skill:
+                existing_skill['hours'] += hours
+                existing_skill['sessions'] += sessions
+            else:
+                work_item_data[work_item]['skills'].append({
+                    'name': skill,
+                    'hours': hours,
+                    'sessions': sessions
+                })
+        
+        return list(work_item_data.values())
