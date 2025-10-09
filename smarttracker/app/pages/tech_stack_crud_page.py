@@ -30,8 +30,8 @@ def show_tech_stack_crud_page():
     
     db = st.session_state.db
     
-    # Create two columns for Add and Manage
-    tab1, tab2 = st.tabs(["➕ Add Technology", "📋 Manage Technologies"])
+    # Create three tabs for Add, Manage, and Categories
+    tab1, tab2, tab3 = st.tabs(["➕ Add Technology", "📋 Manage Technologies", "📁 Manage Categories"])
     
     with tab1:
         st.markdown("### Add New Technology to Stack")
@@ -194,3 +194,124 @@ def show_tech_stack_crud_page():
                                         st.rerun()
                         
                         st.markdown("---")
+    
+    with tab3:
+        st.markdown("### Category Management")
+        
+        # Add new category section
+        st.markdown("#### ➕ Add New Category")
+        with st.form("add_category_form"):
+            new_category = st.text_input("Category Name", placeholder="e.g., ⚙️ DevOps, 🎨 Design")
+            submitted_cat = st.form_submit_button("💾 Add Category", type="primary")
+            
+            if submitted_cat:
+                if new_category and new_category.strip():
+                    if db.add_category(new_category.strip(), is_custom=True):
+                        st.success(f"✅ Added category: {new_category}")
+                        st.rerun()
+                    else:
+                        st.error(f"❌ Category '{new_category}' already exists")
+                else:
+                    st.error("Please enter a category name")
+        
+        st.markdown("---")
+        
+        # Manage existing categories
+        st.markdown("#### 📋 Existing Categories")
+        
+        custom_categories = db.get_custom_categories()
+        all_categories = db.get_all_categories()
+        
+        if not custom_categories:
+            st.info("No custom categories yet. Add one above to get started!")
+        else:
+            st.markdown(f"**Your Custom Categories:** ({len(custom_categories)})")
+            
+            for cat in custom_categories:
+                # Count technologies in this category
+                tech_stack = db.get_all_tech_stack()
+                tech_count = sum(1 for tech in tech_stack if tech.get('category') == cat)
+                
+                with st.expander(f"**{cat}** ({tech_count} technologies)", expanded=False):
+                    col1, col2, col3 = st.columns(3)
+                    
+                    with col1:
+                        if st.button("✏️ Rename", key=f"rename_cat_{cat}", use_container_width=True):
+                            st.session_state.renaming_category = cat
+                            st.rerun()
+                    
+                    with col2:
+                        if st.button("🗑️ Delete", key=f"delete_cat_{cat}", use_container_width=True):
+                            st.session_state.deleting_category = cat
+                            st.rerun()
+                    
+                    with col3:
+                        if st.button("🔀 Merge", key=f"merge_cat_{cat}", use_container_width=True):
+                            st.session_state.merging_category = cat
+                            st.rerun()
+                    
+                    # Rename form
+                    if st.session_state.get('renaming_category') == cat:
+                        with st.form(f"rename_form_{cat}"):
+                            new_cat_name = st.text_input("New Category Name", value=cat)
+                            col_save, col_cancel = st.columns(2)
+                            
+                            with col_save:
+                                if st.form_submit_button("💾 Save", use_container_width=True):
+                                    if new_cat_name and new_cat_name.strip():
+                                        if db.rename_category(cat, new_cat_name.strip()):
+                                            st.success(f"✅ Renamed to '{new_cat_name}'")
+                                            st.session_state.renaming_category = None
+                                            st.rerun()
+                                        else:
+                                            st.error("Category name already exists or invalid")
+                                    else:
+                                        st.error("Please enter a valid name")
+                            
+                            with col_cancel:
+                                if st.form_submit_button("❌ Cancel", use_container_width=True):
+                                    st.session_state.renaming_category = None
+                                    st.rerun()
+                    
+                    # Delete confirmation
+                    if st.session_state.get('deleting_category') == cat:
+                        st.warning(f"⚠️ Delete category '{cat}'?")
+                        if tech_count > 0:
+                            st.info(f"📝 {tech_count} technologies will be moved to '❓ Uncategorized'")
+                        
+                        col_confirm, col_cancel = st.columns(2)
+                        with col_confirm:
+                            if st.button("🗑️ Yes, Delete", key=f"confirm_del_cat_{cat}", use_container_width=True, type="primary"):
+                                if db.delete_category(cat):
+                                    st.success(f"✅ Deleted category '{cat}'")
+                                    st.session_state.deleting_category = None
+                                    st.rerun()
+                                else:
+                                    st.error("Failed to delete category")
+                        
+                        with col_cancel:
+                            if st.button("❌ Cancel", key=f"cancel_del_cat_{cat}", use_container_width=True):
+                                st.session_state.deleting_category = None
+                                st.rerun()
+                    
+                    # Merge form
+                    if st.session_state.get('merging_category') == cat:
+                        with st.form(f"merge_form_{cat}"):
+                            st.caption(f"Merge '{cat}' into another category")
+                            target_categories = [c for c in all_categories if c != cat]
+                            merge_target = st.selectbox("Target Category", options=target_categories)
+                            
+                            col_merge, col_cancel = st.columns(2)
+                            with col_merge:
+                                if st.form_submit_button("🔀 Merge", use_container_width=True, type="primary"):
+                                    if db.merge_categories(cat, merge_target):
+                                        st.success(f"✅ Merged '{cat}' into '{merge_target}'")
+                                        st.session_state.merging_category = None
+                                        st.rerun()
+                                    else:
+                                        st.error("Failed to merge categories")
+                            
+                            with col_cancel:
+                                if st.form_submit_button("❌ Cancel", use_container_width=True):
+                                    st.session_state.merging_category = None
+                                    st.rerun()
