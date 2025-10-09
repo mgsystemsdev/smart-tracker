@@ -5,6 +5,7 @@ No editing functionality - pure KPI and metrics display.
 
 import streamlit as st
 from database.operations import DatabaseStorage
+from services import CachedQueryService
 from datetime import datetime, timedelta
 import pandas as pd
 
@@ -29,12 +30,13 @@ def show_home_kpi_dashboard():
     # ==================== KEY METRICS SECTION ====================
     st.markdown("### 📊 Key Performance Indicators")
     
-    # Get core metrics
-    all_sessions = db.get_all_sessions()
-    total_sessions = len(all_sessions)
-    total_hours = db.get_total_hours()
-    tech_stack = db.get_all_tech_stack()
-    total_technologies = len(tech_stack)
+    # Get core metrics using cached query (ONE batch query instead of multiple)
+    metrics = CachedQueryService.get_dashboard_metrics(db)
+    tech_stack = CachedQueryService.get_tech_stack_with_metrics(db)
+    
+    total_sessions = metrics['total_sessions']
+    total_hours = metrics['total_hours']
+    total_technologies = metrics['tech_count']
     total_goal_hours = sum(tech.get('goal_hours', 0) for tech in tech_stack)
     
     # Display KPI cards
@@ -84,9 +86,10 @@ def show_home_kpi_dashboard():
     # ==================== RECENT ACTIVITY FEED ====================
     st.markdown("### 🔔 Recent Activity")
     
-    if all_sessions:
-        # Get last 5 sessions
-        recent_sessions = sorted(all_sessions, key=lambda x: x.get('created_at', ''), reverse=True)[:5]
+    # Get recent sessions using cached query
+    recent_sessions = CachedQueryService.get_sessions_with_details(db, limit=5, offset=0)
+    
+    if recent_sessions:
         
         for session in recent_sessions:
             activity_date = session.get('session_date', 'Unknown')
@@ -112,14 +115,8 @@ def show_home_kpi_dashboard():
     # ==================== PROGRESS BY CATEGORY ====================
     st.markdown("### 📈 Progress by Category")
     
-    # Group sessions by category
-    category_stats = {}
-    for session in all_sessions:
-        cat = session.get('category_name', 'Uncategorized')
-        hours = session.get('hours_spent', 0)
-        if cat not in category_stats:
-            category_stats[cat] = 0
-        category_stats[cat] += hours
+    # Get category hours using true aggregation (no row limit)
+    category_stats = CachedQueryService.get_category_hours_aggregated(db)
     
     if category_stats:
         # Display as collapsible sections (default closed)

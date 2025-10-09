@@ -6,6 +6,7 @@ Provides filtering, sorting, and detailed session analytics.
 import streamlit as st
 import pandas as pd
 from database.operations import DatabaseStorage
+from services import CachedQueryService
 import logging
 
 def show_sessions_page():
@@ -133,6 +134,7 @@ def show_sessions_page():
                 with col_actions:
                     if st.button("🗑️ Delete", key=f"delete_{session['session_id']}"):
                         db.delete_session(session['session_id'])
+                        CachedQueryService.invalidate_cache()  # Refresh dashboard
                         st.success("Session deleted!")
                         st.rerun()
         

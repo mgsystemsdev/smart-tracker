@@ -192,3 +192,20 @@ class CachedQueryService:
             }
             for cat in all_categories
         }
+    
+    @staticmethod
+    @st.cache_data(ttl=60, show_spinner=False)
+    def get_category_hours_aggregated(_db: DatabaseStorage) -> Dict[str, float]:
+        """Get hours by category using true aggregation (no row limit)."""
+        conn = _db._get_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT 
+                category_name,
+                SUM(hours_spent) as total_hours
+            FROM sessions
+            GROUP BY category_name
+        ''')
+        
+        return {row[0]: row[1] for row in cursor.fetchall()}

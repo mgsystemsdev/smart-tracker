@@ -7,6 +7,7 @@ import streamlit as st
 from datetime import date, datetime
 from database.operations import DatabaseStorage
 from utils.cascading_dropdowns_v2 import DropdownManagerV2
+from services import CachedQueryService
 import logging
 
 def show_log_session_page():
@@ -106,6 +107,9 @@ def show_log_session_page():
                 session_id = db.add_session(session_data)
                 
                 if session_id:
+                    # CRITICAL: Invalidate cache so dashboard refreshes immediately
+                    CachedQueryService.invalidate_cache()
+                    
                     st.success(f"✅ Session saved successfully! (ID: {session_id})")
                     st.balloons()
                     logging.info(f"Added session ID {session_id}: {selected_values.get('technology')} - {hours_spent}h")
