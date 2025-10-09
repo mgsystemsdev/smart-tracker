@@ -1253,8 +1253,21 @@ def main():
     # Load learning sessions from database
     if "learning_sessions" not in st.session_state:
         all_sessions = st.session_state.db.get_all_sessions()
-        # Transform to old format for compatibility
-        st.session_state.learning_sessions = all_sessions
+        # Transform to old format for compatibility with legacy dashboard code
+        transformed_sessions = []
+        for session in all_sessions:
+            transformed_sessions.append({
+                'date': session.get('session_date', session.get('date', '')),
+                'technology': session.get('technology', ''),
+                'topic': session.get('skill_topic', session.get('topic', '')),
+                'notes': session.get('notes', ''),
+                'tags': session.get('tags', ''),
+                'type': session.get('session_type', session.get('type', '')),
+                'difficulty': session.get('difficulty', ''),
+                'status': session.get('status', ''),
+                'hours': session.get('hours_spent', session.get('hours', 0))
+            })
+        st.session_state.learning_sessions = transformed_sessions
     
     # Load tech stack from database
     if "tech_stack_loaded" not in st.session_state:
