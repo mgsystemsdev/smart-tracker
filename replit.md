@@ -3,6 +3,8 @@
 ## Overview
 Smart Tracker is a personal learning tracker with a dual-interface architecture, offering both a Streamlit web interface and a Typer CLI. Its core purpose is to simplify progress tracking by automatically calculating progress from logged hours. The project aims to provide a robust, user-friendly system for logging and visualizing learning efforts, incorporating a hierarchical data model and a comprehensive KPI dashboard. It features MG System Dev branding with golden yellow accents and a dark tech theme.
 
+**Current State:** Blank canvas - database is initialized but contains no pre-loaded categories or technologies. Users start with an empty system and add their own custom data through the Dropdown Manager.
+
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 
