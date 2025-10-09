@@ -36,7 +36,7 @@ class DropdownManager:
         key_suffix: str = "",
         allow_new: bool = True
     ) -> str:
-        """Render a single cascading dropdown with type-to-add functionality."""
+        """Render a single cascading dropdown with type-to-add functionality (Excel-style)."""
         
         if field_name not in self.hierarchy:
             return ""
@@ -46,22 +46,33 @@ class DropdownManager:
         
         # Get existing values from database
         if parent_field and parent_value:
+            # Has parent and parent is selected - filter by parent
             existing_values = self.db.get_dropdown_values(field_name, parent_field, parent_value)
+        elif parent_field and not parent_value:
+            # Has parent but parent is empty - show all values (for visibility)
+            existing_values = self.db.get_dropdown_values(field_name)
         else:
+            # No parent (root level) - show all values
             existing_values = self.db.get_dropdown_values(field_name)
         
         # Display label
         st.markdown(f"**{field_config['label']}**")
         
         if allow_new:
-            # Dropdown with option to add new
+            # Dropdown with option to add new - always show "Type New" option
             options = ["➕ Type New..."] + existing_values if existing_values else ["➕ Type New..."]
+            
+            # Add helper text if parent is empty
+            help_text = None
+            if parent_field and not parent_value:
+                help_text = f"Select {parent_field.replace('_', ' ')} first for filtered options"
             
             selected = st.selectbox(
                 f"{field_name}_dropdown_{key_suffix}",
                 options=options,
                 label_visibility="collapsed",
-                key=f"{field_name}_select_{key_suffix}"
+                key=f"{field_name}_select_{key_suffix}",
+                help=help_text
             )
             
             # If user wants to add new, show text input
@@ -96,39 +107,25 @@ class DropdownManager:
                 return ""
     
     def render_hierarchical_form(self, key_suffix: str = "") -> Dict[str, str]:
-        """Render complete hierarchical dropdown form and return selected values."""
+        """Render complete hierarchical dropdown form with all fields visible (Excel-style)."""
         
         selected_values = {}
         
-        # Category Name (root)
+        # Category Name (root) - Always visible
         category = self.render_cascading_dropdown('category_name', key_suffix=key_suffix)
         selected_values['category_name'] = category
         
-        # Technology (depends on Category)
-        if category:
-            technology = self.render_cascading_dropdown('technology', parent_value=category, key_suffix=key_suffix)
-            selected_values['technology'] = technology
-        else:
-            st.info("👆 Select a category first to choose technology")
-            selected_values['technology'] = ""
+        # Technology (depends on Category) - Always visible, filtered by category
+        technology = self.render_cascading_dropdown('technology', parent_value=category if category else None, key_suffix=key_suffix)
+        selected_values['technology'] = technology
         
-        # Work Item (depends on Technology)
-        if selected_values.get('technology'):
-            work_item = self.render_cascading_dropdown('work_item', parent_value=selected_values['technology'], key_suffix=key_suffix)
-            selected_values['work_item'] = work_item
-        else:
-            if category:  # Only show if category is selected
-                st.info("👆 Select a technology first to choose work item")
-            selected_values['work_item'] = ""
+        # Work Item (depends on Technology) - Always visible, filtered by technology
+        work_item = self.render_cascading_dropdown('work_item', parent_value=technology if technology else None, key_suffix=key_suffix)
+        selected_values['work_item'] = work_item
         
-        # Skill/Topic (depends on Work Item)
-        if selected_values.get('work_item'):
-            skill = self.render_cascading_dropdown('skill_topic', parent_value=selected_values['work_item'], key_suffix=key_suffix)
-            selected_values['skill_topic'] = skill
-        else:
-            if selected_values.get('technology'):  # Only show if technology is selected
-                st.info("👆 Select a work item first to choose skill/topic")
-            selected_values['skill_topic'] = ""
+        # Skill/Topic (depends on Work Item) - Always visible, filtered by work item
+        skill = self.render_cascading_dropdown('skill_topic', parent_value=work_item if work_item else None, key_suffix=key_suffix)
+        selected_values['skill_topic'] = skill
         
         return selected_values
     
