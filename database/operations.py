@@ -564,6 +564,44 @@ class DatabaseStorage:
         
         return breakdown
     
+    # ==================== DIRECT CASCADING DROPDOWN QUERIES ====================
+    
+    def get_technologies_by_category(self, category: str) -> List[str]:
+        """Get all technologies for a specific category from tech_stack table."""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT name FROM tech_stack
+            WHERE category = ?
+            ORDER BY name
+        ''', (category,))
+        
+        return [row[0] for row in cursor.fetchall()]
+    
+    def get_distinct_work_items_by_technology(self, technology: str) -> List[str]:
+        """Get distinct work items for a specific technology from sessions table."""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT DISTINCT work_item FROM sessions
+            WHERE technology = ? AND work_item IS NOT NULL AND work_item != ''
+            ORDER BY work_item
+        ''', (technology,))
+        
+        return [row[0] for row in cursor.fetchall()]
+    
+    def get_distinct_skills_by_work_item(self, work_item: str) -> List[str]:
+        """Get distinct skills/topics for a specific work item from sessions table."""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT DISTINCT skill_topic FROM sessions
+            WHERE work_item = ? AND skill_topic IS NOT NULL AND skill_topic != ''
+            ORDER BY skill_topic
+        ''', (work_item,))
+        
+        return [row[0] for row in cursor.fetchall()]
+    
     def close(self):
         """Close database connection."""
         if self.conn:
