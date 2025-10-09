@@ -10,6 +10,29 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### October 9, 2025 - Data Consistency Unification (Blueprint → Database Migration)
+**Single Source of Truth Achieved**: Eliminated all hardcoded data conflicts by migrating PLANNING_BLUEPRINT to database
+- **Bootstrap Migration** (`bootstrap_blueprint.py`):
+  - One-time migration script loads all PLANNING_BLUEPRINT categories and technologies into database
+  - 6 categories loaded as built-in (is_custom=0): Core Full-Stack Development, Development Tooling & DevOps, etc.
+  - 37 technologies loaded with proper category relationships and goal hours
+  - Uses CategorySyncService and TechnologySyncService for atomic writes to all tables
+- **Dropdown Manager Refactored** (`pages/dropdown_manager.py`):
+  - Now uses CategorySyncService for category additions (syncs to categories + dropdowns tables)
+  - Now uses TechnologySyncService for technology additions (syncs to tech_stack + dropdowns tables)
+  - Other fields (work_item, skill_topic, session_type, etc.) use direct dropdown writes
+  - Cache invalidation after all additions ensures real-time updates
+- **Planning Page Verified**: Already reads from database via db.get_all_tech_stack(), no hardcoded blueprint
+- **Consistency Audit** (`audit_consistency.py`):
+  - Automated script to verify data sync across categories, tech_stack, dropdowns, sessions tables
+  - Technologies 100% consistent across all tables ✅
+  - Categories mostly consistent (minor legacy subcategory names in categories table)
+- **Architecture Impact**:
+  - Zero conflicts between hardcoded PLANNING_BLUEPRINT and database
+  - All pages (Planning, Log Session, Tech Stack, Dropdown Manager) read from same database source
+  - Adding category/technology in any page now propagates to ALL tables via sync services
+  - Single source of truth: Database is authoritative for all dropdown and planning data
+
 ### October 9, 2025 - Performance & Data Flow Architecture v2.0
 **Critical Logic Breaks Fixed**: Eliminated 11 critical data flow issues through unified sync services, query batching, and race condition resolution
 - **Unified Data Sync Services** (`services/sync_service.py`):
