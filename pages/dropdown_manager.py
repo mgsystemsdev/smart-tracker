@@ -347,111 +347,152 @@ def show_dropdown_manager_page():
     
     # ==================== TAB 3: MANAGE DROPDOWNS ====================
     with tabs[2]:
-        st.markdown("### Dropdown Values Management")
-        st.caption("Manage Work Items and other dropdown options")
+        st.markdown("### Work Items & Skills Management")
+        st.caption("Pre-define work items and skills, or let them auto-populate from sessions")
         
-        # Hierarchical fields (excluding category and technology - they have their own tabs)
-        hierarchical_fields = {
-            'work_item': '📋 Work Item',
-            'skill_topic': '🎯 Skill / Topic'
-        }
+        # ========== WORK ITEMS SECTION ==========
+        st.markdown("#### 📋 Work Items")
+        st.caption("Work items are linked to technologies")
         
-        # Independent fields
-        independent_fields = {
-            'session_type': '📝 Session Type',
-            'category_source': '📚 Category Source',
-            'difficulty': '⚡ Difficulty',
-            'status': '✅ Status'
-        }
-        
-        st.markdown("#### 📂 Hierarchical Fields")
-        for field_name, field_label in hierarchical_fields.items():
-            with st.expander(f"{field_label} ({len(all_dropdowns.get(field_name, []))} items)", expanded=False):
-                values = all_dropdowns.get(field_name, [])
-                
-                if values:
-                    for value in values:
-                        col1, col2 = st.columns([4, 1])
-                        with col1:
-                            st.text(value)
-                        with col2:
-                            if st.button("🗑️", key=f"del_{field_name}_{value}", help="Delete this value"):
-                                if dropdown_manager.delete_dropdown_entry(field_name, value):
-                                    st.success(f"Deleted: {value}")
-                                    logging.info(f"Deleted dropdown: {field_name} = {value}")
-                                    st.rerun()
-                                else:
-                                    st.error("Failed to delete")
-                else:
-                    st.caption("No values yet. Add from session entry form.")
-        
-        st.markdown("---")
-        st.markdown("#### 📋 Independent Fields")
-        for field_name, field_label in independent_fields.items():
-            with st.expander(f"{field_label} ({len(all_dropdowns.get(field_name, []))} items)", expanded=False):
-                values = all_dropdowns.get(field_name, [])
-                
-                if values:
-                    for value in values:
-                        col1, col2 = st.columns([4, 1])
-                        with col1:
-                            st.text(value)
-                        with col2:
-                            if st.button("🗑️", key=f"del_{field_name}_{value}", help="Delete this value"):
-                                if dropdown_manager.delete_dropdown_entry(field_name, value):
-                                    st.success(f"Deleted: {value}")
-                                    logging.info(f"Deleted dropdown: {field_name} = {value}")
-                                    st.rerun()
-                                else:
-                                    st.error("Failed to delete")
-                else:
-                    st.caption("No values yet.")
-        
-        st.markdown("---")
-        st.markdown("#### ➕ Add New Dropdown Value")
-        
-        with st.form("add_dropdown_form"):
-            all_fields = {**hierarchical_fields, **independent_fields}
-            selected_field = st.selectbox("Select Field", options=list(all_fields.keys()), format_func=lambda x: all_fields[x])
-            new_value = st.text_input("New Value", placeholder="Enter new dropdown value...")
+        # Add new work item
+        st.markdown("##### ➕ Add Work Item")
+        with st.form("add_work_item_form"):
+            col1, col2 = st.columns(2)
             
-            # For hierarchical fields, show parent selector
-            if selected_field in hierarchical_fields:
-                parent_info = dropdown_manager.hierarchy[selected_field]
-                parent_field = parent_info['parent']
-                
-                if parent_field:
-                    parent_values = all_dropdowns.get(parent_field, [])
-                    if parent_values:
-                        parent_value = st.selectbox(f"Parent {parent_field.replace('_', ' ').title()}", options=parent_values)
-                    else:
-                        st.warning(f"No parent values available for {parent_field}. Add them first.")
-                        parent_value = None
+            with col1:
+                # Select parent technology
+                all_techs = [tech['name'] for tech in db.get_all_tech_stack()]
+                if all_techs:
+                    parent_tech = st.selectbox("Technology", options=all_techs)
                 else:
-                    parent_value = None
-            else:
-                parent_value = None
-                parent_field = None
+                    st.warning("⚠️ Add technologies first in the Manage Technologies tab")
+                    parent_tech = None
             
-            submitted = st.form_submit_button("➕ Add Value", type="primary")
+            with col2:
+                # Work item name
+                work_item_name = st.text_input("Work Item Name", placeholder="e.g., Authentication, API Design")
             
-            if submitted:
-                if new_value and new_value.strip():
-                    value = new_value.strip()
-                    
-                    if db.add_dropdown_value(
-                        selected_field, 
-                        value,
-                        parent_field=parent_field if parent_field else None,
-                        parent_value=parent_value if parent_value else None
-                    ):
-                        st.success(f"✅ Added {value} to {all_fields[selected_field]}")
-                        logging.info(f"Manually added dropdown: {selected_field} = {value}")
+            submitted_work_item = st.form_submit_button("💾 Add Work Item", type="primary")
+            
+            if submitted_work_item:
+                if work_item_name and work_item_name.strip() and parent_tech:
+                    if db.add_work_item(work_item_name.strip(), parent_tech):
+                        st.success(f"✅ Added work item: {work_item_name.strip()} → {parent_tech}")
+                        CachedQueryService.invalidate_cache()
                         st.rerun()
                     else:
-                        st.error("Value already exists or failed to add")
+                        st.error("❌ Work item already exists for this technology")
                 else:
-                    st.error("Please enter a value")
+                    st.error("Please fill in all fields")
+        
+        st.markdown("---")
+        
+        # Show existing work items
+        st.markdown("##### 📋 Existing Work Items")
+        all_work_items = db.get_all_work_items()
+        
+        if not all_work_items:
+            st.info("No manually defined work items yet. They will also auto-populate when you log sessions.")
+        else:
+            st.caption(f"Total: {len(all_work_items)} manually defined work items")
+            
+            # Group by technology
+            by_tech = {}
+            for item in all_work_items:
+                tech = item['technology']
+                if tech not in by_tech:
+                    by_tech[tech] = []
+                by_tech[tech].append(item)
+            
+            for tech, items in sorted(by_tech.items()):
+                with st.expander(f"**{tech}** ({len(items)} work items)", expanded=False):
+                    for item in sorted(items, key=lambda x: x['name']):
+                        col1, col2 = st.columns([4, 1])
+                        with col1:
+                            st.markdown(f"**{item['name']}**")
+                        with col2:
+                            if st.button("🗑️", key=f"del_work_item_{item['name']}_{tech}", help="Delete this work item"):
+                                if db.delete_work_item(item['name'], tech):
+                                    st.success(f"Deleted: {item['name']}")
+                                    CachedQueryService.invalidate_cache()
+                                    st.rerun()
+                                else:
+                                    st.error("Failed to delete")
+        
+        st.markdown("---")
+        st.markdown("---")
+        
+        # ========== SKILLS SECTION ==========
+        st.markdown("#### 🎯 Skills / Topics")
+        st.caption("Skills are linked to work items")
+        
+        # Add new skill
+        st.markdown("##### ➕ Add Skill")
+        with st.form("add_skill_form"):
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                # Select parent work item from manually defined ones
+                all_work_items_list = db.get_all_work_items()
+                if all_work_items_list:
+                    work_item_options = [f"{item['name']} ({item['technology']})" for item in all_work_items_list]
+                    selected_work_item = st.selectbox("Work Item", options=work_item_options)
+                    # Extract just the work item name (before parentheses)
+                    parent_work_item = selected_work_item.split(" (")[0] if selected_work_item else None
+                else:
+                    st.warning("⚠️ Add work items first above")
+                    parent_work_item = None
+            
+            with col2:
+                # Skill name
+                skill_name = st.text_input("Skill Name", placeholder="e.g., JWT Tokens, OAuth2")
+            
+            submitted_skill = st.form_submit_button("💾 Add Skill", type="primary")
+            
+            if submitted_skill:
+                if skill_name and skill_name.strip() and parent_work_item:
+                    if db.add_skill(skill_name.strip(), parent_work_item):
+                        st.success(f"✅ Added skill: {skill_name.strip()} → {parent_work_item}")
+                        CachedQueryService.invalidate_cache()
+                        st.rerun()
+                    else:
+                        st.error("❌ Skill already exists for this work item")
+                else:
+                    st.error("Please fill in all fields")
+        
+        st.markdown("---")
+        
+        # Show existing skills
+        st.markdown("##### 🎯 Existing Skills")
+        all_skills = db.get_all_skills()
+        
+        if not all_skills:
+            st.info("No manually defined skills yet. They will also auto-populate when you log sessions.")
+        else:
+            st.caption(f"Total: {len(all_skills)} manually defined skills")
+            
+            # Group by work item
+            by_work_item = {}
+            for skill in all_skills:
+                work_item = skill['work_item']
+                if work_item not in by_work_item:
+                    by_work_item[work_item] = []
+                by_work_item[work_item].append(skill)
+            
+            for work_item, skills in sorted(by_work_item.items()):
+                with st.expander(f"**{work_item}** ({len(skills)} skills)", expanded=False):
+                    for skill in sorted(skills, key=lambda x: x['name']):
+                        col1, col2 = st.columns([4, 1])
+                        with col1:
+                            st.markdown(f"**{skill['name']}**")
+                        with col2:
+                            if st.button("🗑️", key=f"del_skill_{skill['name']}_{work_item}", help="Delete this skill"):
+                                if db.delete_skill(skill['name'], work_item):
+                                    st.success(f"Deleted: {skill['name']}")
+                                    CachedQueryService.invalidate_cache()
+                                    st.rerun()
+                                else:
+                                    st.error("Failed to delete")
     
     # ==================== TAB 4: STATISTICS ====================
     with tabs[3]:
