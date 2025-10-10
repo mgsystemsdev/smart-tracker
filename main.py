@@ -10,7 +10,7 @@ from pathlib import Path
 
 def main():
     """Launch the Streamlit web application."""
-    app_path = Path(__file__).parent / "app.py"
+    app_path = Path(__file__).parent / "src" / "core" / "app.py"
     subprocess.run([
         sys.executable, "-m", "streamlit", "run", 
         str(app_path), "--server.port=5000", "--server.address=0.0.0.0"
