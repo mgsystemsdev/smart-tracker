@@ -154,9 +154,12 @@ class DatabaseStorage:
         ))
         
         conn.commit()
-        session_id = cursor.fetchone()[0]
-        logging.info(f"Added session ID {session_id}: {session_data.get('technology')} - {session_data.get('skill_topic')}")
-        return session_id if session_id else 0
+        row = cursor.fetchone()
+        if row:
+            session_id = row[0]
+            logging.info(f"Added session ID {session_id}: {session_data.get('technology')} - {session_data.get('skill_topic')}")
+            return session_id
+        return 0
     
     def get_all_sessions(self) -> List[Dict[str, Any]]:
         """Retrieve all learning sessions."""
@@ -233,21 +236,30 @@ class DatabaseStorage:
         conn = self._get_connection()
         cursor = conn.cursor()
         cursor.execute('SELECT COUNT(*) FROM sessions')
-        return cursor.fetchone()[0]
+        row = cursor.fetchone()
+        if row:
+            return row[0]
+        return 0
     
     def get_total_hours(self) -> float:
         """Get total hours spent across all sessions."""
         conn = self._get_connection()
         cursor = conn.cursor()
         cursor.execute('SELECT COALESCE(SUM(hours_spent), 0) FROM sessions')
-        return cursor.fetchone()[0]
+        row = cursor.fetchone()
+        if row:
+            return row[0]
+        return 0.0
     
     def get_total_technologies(self) -> int:
         """Get total number of unique technologies."""
         conn = self._get_connection()
         cursor = conn.cursor()
         cursor.execute('SELECT COUNT(DISTINCT technology) FROM sessions')
-        return cursor.fetchone()[0]
+        row = cursor.fetchone()
+        if row:
+            return row[0]
+        return 0
     
     def get_overall_progress(self) -> float:
         """Calculate overall progress percentage based on total hours vs total goals."""
@@ -255,7 +267,11 @@ class DatabaseStorage:
         cursor = conn.cursor()
         
         cursor.execute('SELECT COALESCE(SUM(goal_hours), 0) FROM tech_stack')
-        total_goal = cursor.fetchone()[0]
+        row = cursor.fetchone()
+        if row:
+            total_goal = row[0]
+        else:
+            total_goal = 0
         
         if total_goal == 0:
             return 0.0
@@ -267,8 +283,8 @@ class DatabaseStorage:
     
     def add_technology(self, name: str, category: str, goal_hours: float, date_added: str) -> int:
         """Add a new technology to the tech stack."""
+        conn = self._get_connection()
         try:
-            conn = self._get_connection()
             cursor = conn.cursor()
             cursor.execute('''
                 INSERT INTO tech_stack (name, category, goal_hours, date_added)
@@ -277,9 +293,12 @@ class DatabaseStorage:
             ''', (name, category, goal_hours, date_added))
             
             conn.commit()
-            tech_id = cursor.fetchone()[0]
-            logging.info(f"Added technology: {name} (ID: {tech_id})")
-            return tech_id
+            row = cursor.fetchone()
+            if row:
+                tech_id = row[0]
+                logging.info(f"Added technology: {name} (ID: {tech_id})")
+                return tech_id
+            return 0
         except psycopg2.IntegrityError:
             conn.rollback()
             logging.warning(f"Technology {name} already exists")
@@ -338,8 +357,8 @@ class DatabaseStorage:
     
     def add_category(self, category_name: str, is_custom: bool = True) -> bool:
         """Add a new category."""
+        conn = self._get_connection()
         try:
-            conn = self._get_connection()
             cursor = conn.cursor()
             date_added = datetime.now().strftime('%Y-%m-%d')
             
@@ -405,8 +424,8 @@ class DatabaseStorage:
                           parent_field: Optional[str] = None, 
                           parent_value: Optional[str] = None) -> bool:
         """Add a new dropdown value with optional parent relationship."""
+        conn = self._get_connection()
         try:
-            conn = self._get_connection()
             cursor = conn.cursor()
             
             cursor.execute('''
@@ -574,8 +593,8 @@ class DatabaseStorage:
     
     def add_work_item(self, name: str, technology: str) -> bool:
         """Add a manually defined work item linked to a technology."""
+        conn = self._get_connection()
         try:
-            conn = self._get_connection()
             cursor = conn.cursor()
             cursor.execute('''
                 INSERT INTO work_items (name, technology)
@@ -620,8 +639,8 @@ class DatabaseStorage:
     
     def add_skill(self, name: str, work_item: str) -> bool:
         """Add a manually defined skill linked to a work item."""
+        conn = self._get_connection()
         try:
-            conn = self._get_connection()
             cursor = conn.cursor()
             cursor.execute('''
                 INSERT INTO skills (name, work_item)
@@ -688,7 +707,10 @@ class DatabaseStorage:
         conn = self._get_connection()
         cursor = conn.cursor()
         cursor.execute('SELECT COUNT(*) FROM sessions WHERE technology = %s', (technology,))
-        return cursor.fetchone()[0]
+        row = cursor.fetchone()
+        if row:
+            return row[0]
+        return 0
     
     def update_sessions_technology(self, old_name: str, new_name: str) -> bool:
         """Update technology name in all sessions."""
