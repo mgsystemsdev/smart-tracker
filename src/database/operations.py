@@ -301,6 +301,15 @@ class DatabaseStorage:
         row = cursor.fetchone()
         return dict(row) if row else None
     
+    def get_tech_by_name(self, name: str) -> Optional[Dict[str, Any]]:
+        """Get a specific technology by name."""
+        conn = self._get_connection()
+        cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+        cursor.execute('SELECT * FROM tech_stack WHERE name = %s', (name,))
+        
+        row = cursor.fetchone()
+        return dict(row) if row else None
+    
     def update_technology(self, tech_id: int, name: str, category: str, goal_hours: float) -> bool:
         """Update an existing technology."""
         conn = self._get_connection()

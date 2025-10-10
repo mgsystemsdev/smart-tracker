@@ -63,9 +63,9 @@ class DropdownManager:
         
         # Get existing values from database
         if parent_field and parent_value:
-            existing_values = self.db.get_dropdown_values(field_name, parent_field, parent_value)
+            existing_values = self.db.get_dropdown_values(field_name, parent_value)
         elif parent_field and not parent_value:
-            existing_values = self.db.get_dropdown_values(field_name, show_all=True)
+            existing_values = self.db.get_dropdown_values(field_name)
         else:
             existing_values = self.db.get_dropdown_values(field_name)
         
@@ -302,10 +302,11 @@ class DropdownManager:
             selected_values['skill_topic'] = ''
         
         # Auto-pair category from selected technology
-        if selected_values.get('technology'):
-            tech_data = self.db.get_tech_by_name(selected_values['technology'])
+        technology = selected_values.get('technology')
+        if technology and isinstance(technology, str):
+            tech_data = self.db.get_tech_by_name(technology)
             if tech_data:
-                selected_values['category_name'] = tech_data.get('category_name', '')
+                selected_values['category_name'] = tech_data.get('category', '')
             else:
                 selected_values['category_name'] = ''
         else:
@@ -340,7 +341,7 @@ class DropdownManager:
         """Save all pending dropdown values stored in session state. Returns count of saved items."""
         
         saved_count = 0
-        pending_keys = [k for k in st.session_state.keys() if k.startswith(f'pending_') and k.endswith(f'_{key_suffix}')]
+        pending_keys = [k for k in st.session_state.keys() if isinstance(k, str) and k.startswith(f'pending_') and k.endswith(f'_{key_suffix}')]
         
         for pending_key in pending_keys:
             pending_data = st.session_state[pending_key]
@@ -358,3 +359,16 @@ class DropdownManager:
             del st.session_state[pending_key]
         
         return saved_count
+    
+    def get_all_dropdown_data(self) -> Dict[str, List[str]]:
+        """Get all dropdown data organized by field name for statistics view."""
+        dropdown_data = {}
+        
+        for field_name in self.hierarchy.keys():
+            dropdown_data[field_name] = self.db.get_dropdown_values(field_name)
+        
+        for field_name in self.independent_fields.keys():
+            if 'options' not in self.independent_fields[field_name]:
+                dropdown_data[field_name] = self.db.get_dropdown_values(field_name)
+        
+        return dropdown_data
