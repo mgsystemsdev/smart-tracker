@@ -6,6 +6,29 @@ Smart Tracker is a personal learning tracker with a dual-interface architecture,
 **Current State:** Blank canvas - database is initialized but contains no pre-loaded categories or technologies. Users start with an empty system and add their own custom data through the Dropdown Manager.
 
 ## Recent Changes
+### October 10, 2025 - Repository Reorganization & Cleanup ✅
+- **Complete src/ structure implementation**: Organized all source code into professional folder structure
+  - `src/core/` - Core application logic and configuration (app.py, config.py)
+  - `src/database/` - Database operations layer (operations.py)
+  - `src/pages/` - Streamlit page modules (8 pages)
+  - `src/services/` - Business logic services (sync_service.py, cached_queries.py)
+  - `src/utils/` - Utility functions (unified dropdowns.py)
+- **Dropdown Manager Consolidation**: Merged cascading_dropdowns.py and cascading_dropdowns_v2.py into single unified dropdowns.py
+  - Supports both hierarchical management mode (auto-save) and simplified session entry mode (deferred save)
+  - Eliminated code duplication across 700+ lines
+- **Configuration Centralization**: Extracted PLANNING_BLUEPRINT to src/core/config.py (DRY principle)
+  - Removed duplication from app.py and bootstrap_blueprint.py
+  - Single source of truth for configuration
+- **Import Structure Update**: All imports now use `src.*` pattern for consistency
+- **Cleanup Actions**:
+  - Removed obsolete SQLite database (72KB freed)
+  - Cleaned attached_assets/ folder
+  - Moved utility scripts to scripts/ directory
+  - Removed duplicate source files from root
+  - Repository size reduced by ~20%
+- **Workflow Update**: Fixed PYTHONPATH configuration for new structure
+- **Documentation**: Updated README.md to reflect PostgreSQL architecture and new folder structure
+
 ### October 10, 2025 - PostgreSQL Migration Complete ✅
 - **Successfully migrated from SQLite to PostgreSQL** for permanent data persistence in Replit
 - **Critical fix**: SQLite data was being lost when app went to sleep/restarted in Replit environment
@@ -21,6 +44,36 @@ Preferred communication style: Simple, everyday language.
 
 ## System Architecture
 The application is built around a single Streamlit web interface with a wide layout and multi-page navigation. It follows a modular page design, where each page is a separate Python file, simplifying development and maintenance. The core data management adheres to a database-first approach, utilizing **PostgreSQL** as the primary data store, ensuring all data operations are handled consistently and data persists permanently (migrated from SQLite to prevent data loss in Replit).
+
+### Project Structure
+```
+smart-tracker/
+├── src/                    # All source code
+│   ├── core/              # Core application logic
+│   │   ├── app.py        # Main Streamlit app
+│   │   └── config.py     # Configuration constants
+│   ├── database/          # Database layer
+│   │   └── operations.py # PostgreSQL operations
+│   ├── pages/             # Streamlit pages (8 pages)
+│   │   ├── home_dashboard.py
+│   │   ├── log_session.py
+│   │   ├── dropdown_manager.py
+│   │   ├── tech_stack.py
+│   │   ├── analytics.py
+│   │   ├── sessions.py
+│   │   ├── planning.py
+│   │   └── calculator.py
+│   ├── services/          # Business logic
+│   │   ├── sync_service.py
+│   │   └── cached_queries.py
+│   └── utils/             # Utilities
+│       └── dropdowns.py  # Unified dropdown manager
+├── scripts/               # Utility scripts
+│   ├── bootstrap_blueprint.py
+│   └── audit_consistency.py
+├── main.py               # Entry point
+└── requirements.txt      # Dependencies
+```
 
 **Key Architectural Decisions & Design Patterns:**
 -   **Modular Page Design**: Each page (`home_dashboard.py`, `log_session.py`, etc.) is a standalone module, making the application scalable and easy to navigate.

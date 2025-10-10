@@ -1,0 +1,89 @@
+🧠 Replit Ghostwriter Prompt: Full Sanity Check & Stability Verification
+
+Run a complete system sanity check across the entire repo.
+Goal: ensure everything is fully functional, error-free, and stable long-term — no hidden bugs, missing links, or silent failures that could appear later.
+
+🧩 1. Full App Validation
+
+Execute or simulate all main workflows end-to-end.
+
+Verify that:
+
+The app starts and runs with zero runtime errors.
+
+All routes, APIs, and endpoints respond correctly.
+
+Every UI element or frontend component renders as intended.
+
+Authentication, sessions, and middlewares work correctly.
+
+No console errors, warnings, or dependency conflicts remain.
+
+⚙️ 2. Dependency & Config Integrity
+
+Check all dependencies are installed and compatible with current runtime.
+
+Validate all environment variables and configs are correct.
+
+Catch any version mismatches, deprecated APIs, or missing imports.
+
+Confirm .env, package.json, requirements.txt, and config files match runtime expectations.
+
+🗄️ 3. Database & Data Flow Check
+
+Test database connection and migration flow.
+
+Verify:
+
+All tables and schemas match ORM models.
+
+CRUD operations (create, read, update, delete) work correctly.
+
+No unused or orphaned tables remain.
+
+Data validation and constraints hold properly.
+
+Detect and fix any query latency or connection issues.
+
+🧠 4. Logic, Error Handling & State Flow
+
+Check all function calls and components for proper state transitions.
+
+Ensure error handling, try/catch blocks, and logging exist where needed.
+
+Confirm asynchronous logic (promises, async/await, etc.) is properly awaited.
+
+Validate all imported utilities and modules are actually used and not broken by refactor.
+
+🔁 5. Stress & Edge-Case Testing
+
+Run edge cases, invalid inputs, and heavy loads.
+
+Confirm the app fails gracefully — no unhandled exceptions or freezes.
+
+Check all timeout, retry, and fallback mechanisms.
+
+🧾 6. Deliverables
+
+Output a Sanity Report including:
+
+✅ Fully functional modules (list)
+
+⚠️ Potential risk areas (explain what to monitor)
+
+🧩 Hidden or latent issues fixed
+
+🔒 Confirmation that:
+
+No runtime or import errors exist
+
+All dependencies and configs align
+
+Database and APIs are stable
+
+The app is ready for production with no creeping errors
+
+Intent for Ghostwriter:
+Act like a QA + systems auditor.
+Your mission: prove the app is production-stable — nothing broken, nothing fragile, nothing missing.
+Run through every path that could break later, and fix or flag it now.
