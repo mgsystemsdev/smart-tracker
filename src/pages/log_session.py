@@ -6,7 +6,7 @@ Uses the new hierarchical dropdown system for data entry.
 import streamlit as st
 from datetime import date, datetime
 from src.database.operations import DatabaseStorage
-from src.utils.cascading_dropdowns_v2 import DropdownManagerV2
+from src.utils.dropdowns import DropdownManager
 from src.services import CachedQueryService
 import logging
 
@@ -30,7 +30,7 @@ def show_log_session_page():
         st.session_state.db = DatabaseStorage()
     
     db = st.session_state.db
-    dropdown_manager = DropdownManagerV2(db)
+    dropdown_manager = DropdownManager(db)
     
     st.markdown("---")
     

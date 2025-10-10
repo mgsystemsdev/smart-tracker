@@ -5,7 +5,7 @@ Uses sync services to ensure data consistency across all tables.
 """
 
 import streamlit as st
-from src.utils.cascading_dropdowns import DropdownManager
+from src.utils.dropdowns import DropdownManager
 from src.database.operations import DatabaseStorage
 from src.services.sync_service import TechnologySyncService, CategorySyncService
 from src.services.cached_queries import CachedQueryService
