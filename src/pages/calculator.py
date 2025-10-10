@@ -4,7 +4,7 @@ Calculates completion time based on total hours and work schedule.
 """
 
 import streamlit as st
-from database.operations import DatabaseStorage
+from src.database.operations import DatabaseStorage
 
 def show_calculator_page():
     """Display the Calculator page for workload estimation."""

@@ -4,7 +4,7 @@ Displays progress, goals, and completion tracking.
 """
 
 import streamlit as st
-from database.operations import DatabaseStorage
+from src.database.operations import DatabaseStorage
 
 def show_planning_page():
     """Display dynamic learning roadmap grouped by category."""

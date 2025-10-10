@@ -5,8 +5,8 @@ Provides filtering, sorting, and detailed session analytics.
 
 import streamlit as st
 import pandas as pd
-from database.operations import DatabaseStorage
-from services import CachedQueryService
+from src.database.operations import DatabaseStorage
+from src.services import CachedQueryService
 import logging
 
 def show_sessions_page():

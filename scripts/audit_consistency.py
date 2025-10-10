@@ -4,7 +4,7 @@ Data Consistency Audit Script
 Compares categories and technologies across all tables to find inconsistencies.
 """
 
-from database.operations import DatabaseStorage
+from src.database.operations import DatabaseStorage
 import logging
 
 # Setup logging

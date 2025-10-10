@@ -4,8 +4,8 @@ Shows detailed metrics for categories, technologies, and work items.
 """
 
 import streamlit as st
-from database.operations import DatabaseStorage
-from services.cached_queries import CachedQueryService
+from src.database.operations import DatabaseStorage
+from src.services.cached_queries import CachedQueryService
 
 def show_analytics_page():
     """Display the Analytics Dashboard page."""

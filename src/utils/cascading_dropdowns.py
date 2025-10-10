@@ -5,7 +5,7 @@ Implements the dependency chain: Category → Technology → Work Item → Skill
 
 import streamlit as st
 from typing import List, Dict, Optional, Tuple
-from database.operations import DatabaseStorage
+from src.database.operations import DatabaseStorage
 
 class DropdownManager:
     """Manages hierarchical dropdown dependencies and auto-population."""

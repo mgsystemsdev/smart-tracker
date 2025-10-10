@@ -4,8 +4,8 @@ No editing functionality - pure KPI and metrics display.
 """
 
 import streamlit as st
-from database.operations import DatabaseStorage
-from services import CachedQueryService
+from src.database.operations import DatabaseStorage
+from src.services import CachedQueryService
 from datetime import datetime, timedelta
 import pandas as pd
 

@@ -5,7 +5,7 @@ Uses Streamlit's @st.cache_data decorator for performance optimization.
 
 import streamlit as st
 from typing import Dict, List, Any
-from database.operations import DatabaseStorage
+from src.database.operations import DatabaseStorage
 import logging
 
 class CachedQueryService:

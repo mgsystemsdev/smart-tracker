@@ -4,8 +4,8 @@ Read-only display showing technology cards grouped by category with progress met
 """
 
 import streamlit as st
-from database.operations import DatabaseStorage
-from services.cached_queries import CachedQueryService
+from src.database.operations import DatabaseStorage
+from src.services.cached_queries import CachedQueryService
 
 def show_tech_stack_crud_page():
     """Display the Tech Stack visual dashboard."""

@@ -5,7 +5,7 @@ Ensures tech_stack and dropdowns tables stay in sync.
 
 import logging
 from typing import Optional, Dict, List, Any
-from database.operations import DatabaseStorage
+from src.database.operations import DatabaseStorage
 
 class TechnologySyncService:
     """Unified service for technology operations across tech_stack and dropdowns."""
