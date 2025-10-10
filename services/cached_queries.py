@@ -133,7 +133,7 @@ class CachedQueryService:
         cursor.execute('''
             SELECT * FROM sessions 
             ORDER BY session_date DESC, created_at DESC
-            LIMIT ? OFFSET ?
+            LIMIT %s OFFSET %s
         ''', (limit, offset))
         
         rows = cursor.fetchall()

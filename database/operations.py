@@ -653,6 +653,84 @@ class DatabaseStorage:
         
         return [{'name': row[0], 'work_item': row[1]} for row in cursor.fetchall()]
     
+    # ==================== SESSION TYPE OPERATIONS ====================
+    
+    def get_session_type_breakdown(self) -> Dict[str, float]:
+        """Get total hours spent per session type."""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT session_type, SUM(hours_spent) as total_hours
+            FROM sessions
+            GROUP BY session_type
+            ORDER BY total_hours DESC
+        ''')
+        
+        breakdown = {}
+        for row in cursor.fetchall():
+            breakdown[row[0]] = row[1]
+        
+        return breakdown
+    
+    # ==================== SYNC SERVICE SUPPORT METHODS ====================
+    
+    def count_sessions_by_technology(self, technology: str) -> int:
+        """Count sessions for a specific technology."""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT COUNT(*) FROM sessions WHERE technology = %s', (technology,))
+        return cursor.fetchone()[0]
+    
+    def update_sessions_technology(self, old_name: str, new_name: str) -> bool:
+        """Update technology name in all sessions."""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        cursor.execute('''
+            UPDATE sessions
+            SET technology = %s
+            WHERE technology = %s
+        ''', (new_name, old_name))
+        conn.commit()
+        return cursor.rowcount > 0
+    
+    def update_sessions_category(self, old_name: str, new_name: str) -> bool:
+        """Update category name in all sessions."""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        cursor.execute('''
+            UPDATE sessions
+            SET category_name = %s
+            WHERE category_name = %s
+        ''', (new_name, old_name))
+        conn.commit()
+        return cursor.rowcount > 0
+    
+    def merge_categories(self, source: str, target: str) -> bool:
+        """Merge source category into target category."""
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        
+        # Update all sessions
+        cursor.execute('''
+            UPDATE sessions
+            SET category_name = %s
+            WHERE category_name = %s
+        ''', (target, source))
+        
+        # Update all technologies
+        cursor.execute('''
+            UPDATE tech_stack
+            SET category = %s
+            WHERE category = %s
+        ''', (target, source))
+        
+        # Delete source category
+        cursor.execute('DELETE FROM categories WHERE category_name = %s', (source,))
+        
+        conn.commit()
+        logging.info(f"Merged category: {source} -> {target}")
+        return True
+    
     def close(self):
         """Close database connection."""
         if self.conn:

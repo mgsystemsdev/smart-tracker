@@ -5,15 +5,26 @@ Smart Tracker is a personal learning tracker with a dual-interface architecture,
 
 **Current State:** Blank canvas - database is initialized but contains no pre-loaded categories or technologies. Users start with an empty system and add their own custom data through the Dropdown Manager.
 
+## Recent Changes
+### October 10, 2025 - PostgreSQL Migration Complete ✅
+- **Successfully migrated from SQLite to PostgreSQL** for permanent data persistence in Replit
+- **Critical fix**: SQLite data was being lost when app went to sleep/restarted in Replit environment
+- **Database migration**: All tables migrated (sessions, tech_stack, categories, dropdowns, work_items, skills)
+- **SQL syntax updates**: Converted all queries from SQLite (`?` placeholders) to PostgreSQL (`%s` placeholders)
+- **Connection management**: Implemented PostgreSQL connection pooling using psycopg2-binary
+- **Environment integration**: Using Replit's managed PostgreSQL with DATABASE_URL, PGPORT, PGUSER, PGPASSWORD, etc.
+- **Verified working**: Tested with sample data - all CRUD operations functioning correctly
+- **Data persistence confirmed**: Data now survives app restarts and sleep cycles
+
 ## User Preferences
 Preferred communication style: Simple, everyday language.
 
 ## System Architecture
-The application is built around a single Streamlit web interface with a wide layout and multi-page navigation. It follows a modular page design, where each page is a separate Python file, simplifying development and maintenance. The core data management adheres to a database-first approach, utilizing SQLite as the primary data store, ensuring all data operations are handled consistently.
+The application is built around a single Streamlit web interface with a wide layout and multi-page navigation. It follows a modular page design, where each page is a separate Python file, simplifying development and maintenance. The core data management adheres to a database-first approach, utilizing **PostgreSQL** as the primary data store, ensuring all data operations are handled consistently and data persists permanently (migrated from SQLite to prevent data loss in Replit).
 
 **Key Architectural Decisions & Design Patterns:**
 -   **Modular Page Design**: Each page (`home_dashboard.py`, `log_session.py`, etc.) is a standalone module, making the application scalable and easy to navigate.
--   **Database-First Approach**: All data persistence is handled via SQLite, migrating away from file-based storage to ensure data integrity and consistency.
+-   **Database-First Approach**: All data persistence is handled via PostgreSQL, migrated from SQLite to ensure data integrity, consistency, and permanent persistence in the Replit environment.
 -   **Service Layer Architecture**: Business logic is encapsulated in dedicated services, such as `TechnologySyncService` and `CategorySyncService` for atomic data synchronization across tables, and `CachedQueryService` for optimizing read performance.
 -   **Direct Table Queries**: Cascading dropdowns read directly from source tables (categories, tech_stack, sessions) instead of using the dropdowns table, eliminating sync issues and ensuring single source of truth.
 -   **Performance Patterns**: Includes query batching, aggressive caching with manual invalidation on writes, and deferred saves for form submissions to enhance responsiveness and data consistency.
@@ -53,5 +64,6 @@ The application is built around a single Streamlit web interface with a wide lay
 -   **Typer**: For developing the command-line interface.
 -   **Python 3.11+**: The minimum required Python version.
 -   **pip**: For managing project dependencies.
--   **SQLite Database**: The primary data persistence layer (`data/smart_tracker.db`), configured with `check_same_thread=False` for Streamlit compatibility.
+-   **PostgreSQL Database**: The primary data persistence layer using Replit's managed PostgreSQL (Neon-backed), ensuring permanent data persistence. Migrated from SQLite to prevent data loss when app sleeps/restarts.
+-   **psycopg2-binary**: PostgreSQL adapter for Python, enabling database connectivity.
 -   **pytest**: The testing framework used for development (though tests directory is currently minimal).
