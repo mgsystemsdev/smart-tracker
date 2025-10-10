@@ -27,20 +27,12 @@ outputType = "webview"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "pip install streamlit pandas && streamlit run app.py --server.port=5000 --server.address=0.0.0.0"
+args = "export PYTHONPATH=\"${PYTHONPATH}:$(pwd)\" && pip install streamlit pandas && streamlit run src/core/app.py --server.port=5000 --server.address=0.0.0.0"
 waitForPort = 5000
 
 [[ports]]
 localPort = 5000
 externalPort = 80
-
-[[ports]]
-localPort = 41495
-externalPort = 4200
-
-[[ports]]
-localPort = 42561
-externalPort = 3002
 
 [[ports]]
 localPort = 45197
