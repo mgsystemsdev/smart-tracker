@@ -12,6 +12,10 @@ import os
 import sys
 from pathlib import Path
 
+# Add project root to Python path for Streamlit Community Cloud
+project_root = Path(__file__).parent.parent.parent
+sys.path.insert(0, str(project_root))
+
 from src.database.operations import DatabaseStorage
 from src.core.config import PLANNING_BLUEPRINT, __version__
 
