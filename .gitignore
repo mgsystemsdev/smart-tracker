@@ -1,6 +1,12 @@
-# Data files
-data/
-*.json
+# Data files (SQLite - not used anymore, using PostgreSQL now)
+data/*.db
+data/*.db-journal
+*.sqlite
+*.sqlite3
+
+# Logs
+logs/
+*.log
 
 # Python
 __pycache__/
